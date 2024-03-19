@@ -1,5 +1,8 @@
 #include "Engine.h"
 #include <stdbool.h>
+#include <stdio.h>
+
+#define MS_PER_UPDATE 0.1
 
 int main(void) {
   GLFWwindow *window;
@@ -16,26 +19,42 @@ int main(void) {
 
   // Getting the size of the drawable area in the window
   glfwGetFramebufferSize(window, &drawableWidth, &drawableHeight);
-  printf("Viewport Width: %d\nViewport Height: %d", drawableWidth,
-         drawableHeight);
 
   // Setting the viewport to cover the whole window
   glViewport(0, 0, drawableWidth, drawableHeight);
 
+  double prevTime = glfwGetTime();
+  double lag = 0.0;
   // main game loop
   while (!glfwWindowShouldClose(window)) {
+    double currentTime = glfwGetTime();
+    double deltaTime = currentTime - prevTime;
+    prevTime = currentTime;
+    lag += deltaTime;
+
     processInput(window);
-    glfwPollEvents();                     // poll for events and process them
+
+    // Ensure game time catches up with real time
+    while (lag >= MS_PER_UPDATE) {
+      glfwPollEvents();
+      lag -= MS_PER_UPDATE;
+      printf("Polling");
+      fflush(stdout);
+    }
+
+    // Clear back buffer
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Turquoise color
-    glClear(GL_COLOR_BUFFER_BIT); // clear back buffer with specified color
-    // Rendering test
+    glClear(GL_COLOR_BUFFER_BIT);
+    // Render new data to back buffer
     glBegin(GL_TRIANGLES);
     glColor3f(1.0f, 0.0f, 0.0f); // Red color
     glVertex2f(-0.5f, -0.5f);
     glVertex2f(0.5f, -0.5f);
     glVertex2f(0.0f, 0.5f);
     glEnd();
-    glfwSwapBuffers(window); // swap front and back buffers
+    // Swap Buffers
+
+    glfwSwapBuffers(window);
   }
 
   // Deletes all of GLFW's allocated resources
