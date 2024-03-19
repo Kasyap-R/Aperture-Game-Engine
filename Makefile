@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 CC = gcc
-CFLAGS = -Wall -Wextra -g
+CFLAGS = -g --debug -Iinclude
 LDFLAGS = -lglfw -lGL -ldl
 SRC_DIR = src
 OBJ_DIR = obj
