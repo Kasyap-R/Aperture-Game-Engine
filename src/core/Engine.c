@@ -1,8 +1,4 @@
 #include "Engine.h"
-#include <stdbool.h>
-#include <stdio.h>
-
-#define MS_PER_UPDATE 0.1
 
 int main(void) {
   GLFWwindow *window;
@@ -23,11 +19,16 @@ int main(void) {
   // Setting the viewport to cover the whole window
   glViewport(0, 0, drawableWidth, drawableHeight);
 
-  double prevTime = glfwGetTime();
+  ECS ecs;
+  initECS(&ecs);
+  ComponentMask entityComponentMasks[MAX_ENTITIES];
+  instantiatePlayerEntity(&ecs, PLAYER_ENTITY_ID, entityComponentMasks);
+
+  double prevTime = glfwGetTime() * 1000;
   double lag = 0.0;
   // main game loop
   while (!glfwWindowShouldClose(window)) {
-    double currentTime = glfwGetTime();
+    double currentTime = glfwGetTime() * 1000;
     double deltaTime = currentTime - prevTime;
     prevTime = currentTime;
     lag += deltaTime;
@@ -37,9 +38,8 @@ int main(void) {
     // Ensure game time catches up with real time
     while (lag >= MS_PER_UPDATE) {
       glfwPollEvents();
+      update();
       lag -= MS_PER_UPDATE;
-      printf("Polling");
-      fflush(stdout);
     }
 
     // Clear back buffer
@@ -62,11 +62,9 @@ int main(void) {
   return 0;
 }
 
-void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, true);
-  }
-}
+void update() {}
+
+void render(ECS *ecs) {}
 
 void framebufferSizeCallback(GLFWwindow *window, int drawableWidth,
                              int drawableHeight) {

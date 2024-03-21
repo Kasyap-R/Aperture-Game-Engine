@@ -1,4 +1,3 @@
-SHELL := /bin/bash
 CC = gcc
 CFLAGS = -g --debug -Iinclude
 LDFLAGS = -lglfw -lGL -ldl
