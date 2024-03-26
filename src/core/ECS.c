@@ -25,7 +25,8 @@ void removeComponentFromEntity(uint8_t entityID, ComponentType type,
 
 void initECS(ECS *ecs) {
   memset(ecs->entityActive, 0, sizeof(ecs->entityActive));
-  initPositionComponent(ecs->positionComponent);
+  initTransformComponent(ecs->transformComponent);
   initVelocityComponent(ecs->velocityComponent);
   initInputComponent(ecs->inputComponent);
+  initMeshComponent(ecs->meshComponent);
 }

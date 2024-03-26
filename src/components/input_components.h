@@ -7,3 +7,4 @@ typedef struct {
 } InputComponent;
 
 void initInputComponent(InputComponent *inputComponent);
+void setEntityInput(InputComponent *inputComponent, bool isAPressed, bool isDPressed);

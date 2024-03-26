@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "render_components.h": "c",
+        "physics_components.h": "c",
+        "input.h": "c",
+        "physics.h": "c"
+    }
+}

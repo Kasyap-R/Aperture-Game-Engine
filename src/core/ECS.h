@@ -1,23 +1,26 @@
 #pragma once
 
 #include "../../include/Global.h"
-#include "../components/input/input.h"
-#include "../components/physics/components.h"
+#include "../components/render_components.h"
+#include "../components/input_components.h"
+#include "../components/physics_components.h"
 #include <stdint.h>
 
 typedef uint8_t ComponentMask;
 
 typedef enum {
   COMPONENT_INPUT,
-  COMPONENT_POSITION,
+  COMPONENT_TRANFORM,
   COMPONENT_VELOCITY,
+  COMPONENT_MESH,
   COMPONENT_COUNT,
 } ComponentType;
 
 typedef struct {
   InputComponent inputComponent[MAX_ENTITIES];
-  PositionComponent positionComponent[MAX_ENTITIES];
+  TransformComponent transformComponent[MAX_ENTITIES];
   VelocityComponent velocityComponent[MAX_ENTITIES];
+  MeshComponent meshComponent[MAX_ENTITIES];
   bool entityActive[MAX_ENTITIES];
 } ECS;
 

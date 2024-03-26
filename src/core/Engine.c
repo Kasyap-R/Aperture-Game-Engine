@@ -1,5 +1,7 @@
 #include "Engine.h"
 
+#define PLAYER_ENTITY_ID 0
+
 int main(void) {
   GLFWwindow *window;
 
@@ -38,7 +40,7 @@ int main(void) {
     // Ensure game time catches up with real time
     while (lag >= MS_PER_UPDATE) {
       glfwPollEvents();
-      update();
+      update(&ecs, entityComponentMasks);
       lag -= MS_PER_UPDATE;
     }
 
@@ -52,6 +54,7 @@ int main(void) {
     glVertex2f(0.5f, -0.5f);
     glVertex2f(0.0f, 0.5f);
     glEnd();
+
     // Swap Buffers
 
     glfwSwapBuffers(window);
@@ -62,7 +65,7 @@ int main(void) {
   return 0;
 }
 
-void update() {}
+void update(ECS *ecs, ComponentMask *entityComponentMasks) {}
 
 void render(ECS *ecs) {}
 

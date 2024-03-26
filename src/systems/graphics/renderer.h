@@ -1,6 +1,10 @@
 #pragma once
-#include "../../components/physics/components.h"
+#include "../../components/physics_components.h"
+#include "../../components/render_components.h"
 #include "../../core/ECS.h"
 #include <stdint.h>
 
-void renderPlayer(PositionComponent *positionComponent, uint8_t playerEntityID);
+void renderPlayer(ECS *ecs, uint8_t entityID);
+
+int generateRectangleVertices(float *vertices, float x, float y, float width,
+                              float height);
