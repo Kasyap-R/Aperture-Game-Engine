@@ -1,5 +1,5 @@
 #pragma once
-#include "../../../include/Global.h"
+#include "../../include/Global.h"
 #include <stdint.h>
 
 typedef struct {
@@ -9,4 +9,6 @@ typedef struct {
 } MeshComponent;
 
 void initMeshComponent(MeshComponent *mComponent);
-void setEntityMesh(MeshComponent *mComponent, uint8_t entityID, unsigned int VAO, unsigned int VBO, unsigned int vertexCount);
+void setEntityMesh(MeshComponent *mComponent, uint8_t entityID,
+                   unsigned int VAO, unsigned int VBO,
+                   unsigned int vertexCount);

@@ -14,7 +14,8 @@ void instantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
   float width = 0.3f;
   float height = 0.1f;
   float rotation = 0.0f;
-  setEntityTransform(ecs->transformComponent, playerEntityID, xPos, yPos, width, height, rotation);
+  setEntityTransform(ecs->transformComponent, playerEntityID, xPos, yPos, width,
+                     height, rotation);
   float *vertices;
 
   // TODO: Move this to the rendering system
@@ -39,21 +40,4 @@ void instantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
   // glBindVertexArray(0);
 
   // setEntityMesh(ecs->meshComponent, playerEntityID, VAO, VBO, vertArraySize);
-}
-
-
-
-void setEntityVelocity(VelocityComponent *velocityComponent, uint8_t entityID,
-                       float xVelocity, float yVelocity) {
-  velocityComponent->vX[entityID] = xVelocity;
-  velocityComponent->vY[entityID] = yVelocity;
-}
-
-void setEntityTransform(TransformComponent *transformComponent,
-                        uint8_t entityID, float xPosition, float yPosition, float xScale, float yScale, float rotation) {
-  transformComponent->x[entityID] = xPosition;
-  transformComponent->y[entityID] = yPosition;
-  transformComponent->xScale[entityID] = xScale;
-  transformComponent->yScale[entityID] = yScale;
-  transformComponent->rotation[entityID] = rotation;
 }
