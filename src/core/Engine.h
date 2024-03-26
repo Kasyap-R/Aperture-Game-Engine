@@ -1,9 +1,9 @@
 #pragma once
 
 #include "../../include/Global.h"
-#include "../components/render_components.h"
 #include "../components/input_components.h"
 #include "../components/physics_components.h"
+#include "../components/render_components.h"
 #include "../systems/graphics/renderer.h"
 #include "../systems/input/input.h"
 #include "../systems/physics/physics.h"
@@ -22,5 +22,6 @@ int initializeWindow(GLFWwindow **window, int windowWidth, int windowHeight);
 void framebufferSizeCallback(GLFWwindow *window, int drawableWidth,
                              int drawableHeight);
 void processInput(GLFWwindow *window);
+void start(ECS *ecs, ComponentMask *entityComponentMasks);
 void update(ECS *ecs, ComponentMask *entityComponentMasks);
 void render(ECS *ecs);

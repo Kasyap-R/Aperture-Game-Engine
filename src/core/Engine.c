@@ -24,10 +24,12 @@ int main(void) {
   ECS ecs;
   initECS(&ecs);
   ComponentMask entityComponentMasks[MAX_ENTITIES];
-  instantiatePlayerEntity(&ecs, PLAYER_ENTITY_ID, entityComponentMasks);
 
   double prevTime = glfwGetTime() * 1000;
   double lag = 0.0;
+
+  start(&ecs, entityComponentMasks);
+
   // main game loop
   while (!glfwWindowShouldClose(window)) {
     double currentTime = glfwGetTime() * 1000;
@@ -63,6 +65,12 @@ int main(void) {
   // Deletes all of GLFW's allocated resources
   glfwTerminate();
   return 0;
+}
+
+void start(ECS *ecs, ComponentMask *entityComponentMasks) {
+  // Set up player components
+  physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
+  render_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
 }
 
 void update(ECS *ecs, ComponentMask *entityComponentMasks) {}

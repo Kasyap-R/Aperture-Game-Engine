@@ -1,24 +1,27 @@
 #include "physics.h"
 #include <stdint.h>
 
-void instantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
-                             ComponentMask *entityComponentMasks) {
+void physics_InstantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
+                                     ComponentMask *entityComponentMasks) {
   addComponentToEntity(playerEntityID, COMPONENT_INPUT, entityComponentMasks);
   addComponentToEntity(playerEntityID, COMPONENT_VELOCITY,
                        entityComponentMasks);
   addComponentToEntity(playerEntityID, COMPONENT_TRANFORM,
                        entityComponentMasks);
-  addComponentToEntity(playerEntityID, COMPONENT_MESH, entityComponentMasks);
   float xPos = 0.5f;
   float yPos = 0.25f;
   float width = 0.3f;
   float height = 0.1f;
   float rotation = 0.0f;
+  float xVelocity = 0.0f;
+  float yVelocity = 0.0f;
   setEntityTransform(ecs->transformComponent, playerEntityID, xPos, yPos, width,
                      height, rotation);
-  float *vertices;
+  setEntityVelocity(ecs->velocityComponent, playerEntityID, xVelocity,
+                    yVelocity);
 
   // TODO: Move this to the rendering system
+  // float *vertices;
   // int vertArraySize =
   //     generateRectangleVertices(vertices, xPos, yPos, width, height);
 

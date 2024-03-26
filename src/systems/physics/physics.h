@@ -4,8 +4,8 @@
 #include "../../core/Engine.h"
 #include <stdint.h>
 
-void instantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
-                             ComponentMask *entityComponentMasks);
+void physics_InstantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
+                                     ComponentMask *entityComponentMasks);
 
 void instantiateBallEntity(ECS *ecs, uint8_t ballEntityID,
                            ComponentMask *entityComponentMasks);
