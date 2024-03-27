@@ -3,6 +3,7 @@
 #include "../../components/render_components.h"
 #include "../../core/ECS.h"
 #include "../../core/Engine.h"
+#include "shaders.h"
 
 #include <stdint.h>
 

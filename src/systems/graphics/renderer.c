@@ -1,10 +1,51 @@
 #include "renderer.h"
+#include "shaders.h"
+
+#include <stdlib.h>
+#include <string.h>
 
 #define COMPONENTS_PER_VERTEX 3
 #define VERTICES_PER_RECTANGE 6
 
 void render_RenderComponent(ECS *ecs, uint8_t entityID) {
-  // We modify VBO based upon the transform
+  // Compiling Shader
+  char *vertexShaderSource_heap = loadShaderSource("shaders/player.vert");
+  GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+  const GLchar *source = vertexShaderSource_heap;
+  glShaderSource(vertexShader, 1, &source, NULL);
+  glCompileShader(vertexShader);
+
+  GLint success;
+  GLchar infoLog[512];
+  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+    printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
+  }
+
+  free(vertexShaderSource_heap);
+
+  // Linking Shader Program
+  GLuint shaderProgram = glCreateProgram();
+  glAttachShader(shaderProgram, vertexShader);
+  // Attach fragment shader here when neccesary
+  glLinkProgram(shaderProgram);
+  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+  if (!success) {
+    glGetShaderInfoLog(shaderProgram, 512, NULL, infoLog);
+    printf("ERROR::SHADER::VERTEX::LINKING_FAILED\n%s\n", infoLog);
+  }
+
+  glDeleteShader(vertexShader);
+
+  glUseProgram(shaderProgram);
+  unsigned int VAO = ecs->meshComponent->VAO[entityID];
+  unsigned int VBO = ecs->meshComponent->VBO[entityID];
+  unsigned int numVerts = ecs->meshComponent->vertexCount[entityID];
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBindVertexArray(VAO);
+  glDrawArrays(GL_TRIANGLES, 0, numVerts);
+  glBindVertexArray(0);
 }
 
 void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,

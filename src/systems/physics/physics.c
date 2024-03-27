@@ -19,28 +19,4 @@ void physics_InstantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
                      height, rotation);
   setEntityVelocity(ecs->velocityComponent, playerEntityID, xVelocity,
                     yVelocity);
-
-  // TODO: Move this to the rendering system
-  // float *vertices;
-  // int vertArraySize =
-  //     generateRectangleVertices(vertices, xPos, yPos, width, height);
-
-  // // move this into rendering step
-  // unsigned int VBO, VAO;
-  // glGenVertexArrays(1, &VAO);
-  // glGenBuffers(1, &VBO);
-
-  // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  // glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), vertices,
-  //              GL_STATIC_DRAW);
-
-  // glVertexAttribPointer(0, COMPONENTS_PER_VERTEX, GL_FLOAT, GL_FALSE,
-  //                       COMPONENTS_PER_VERTEX * sizeof(float), (void *)0);
-  // glEnableVertexAttribArray(0);
-
-  // // Unbinds currently binded VBO/VAO
-  // glBindBuffer(GL_ARRAY_BUFFER, 0);
-  // glBindVertexArray(0);
-
-  // setEntityMesh(ecs->meshComponent, playerEntityID, VAO, VBO, vertArraySize);
 }

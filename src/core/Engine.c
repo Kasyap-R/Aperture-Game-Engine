@@ -50,14 +50,8 @@ int main(void) {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Turquoise color
     glClear(GL_COLOR_BUFFER_BIT);
     // Render new data to back buffer
-    glBegin(GL_TRIANGLES);
-    glColor3f(1.0f, 0.0f, 0.0f); // Red color
-    glVertex2f(-0.5f, -0.5f);
-    glVertex2f(0.5f, -0.5f);
-    glVertex2f(0.0f, 0.5f);
-    glEnd();
-
     // Swap Buffers
+    render(&ecs);
 
     glfwSwapBuffers(window);
   }
@@ -75,7 +69,7 @@ void start(ECS *ecs, ComponentMask *entityComponentMasks) {
 
 void update(ECS *ecs, ComponentMask *entityComponentMasks) {}
 
-void render(ECS *ecs) {}
+void render(ECS *ecs) { render_RenderComponent(ecs, PLAYER_ENTITY_ID); }
 
 void framebufferSizeCallback(GLFWwindow *window, int drawableWidth,
                              int drawableHeight) {
