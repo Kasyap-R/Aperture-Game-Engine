@@ -22,6 +22,6 @@ int initializeWindow(GLFWwindow **window, int windowWidth, int windowHeight);
 void framebufferSizeCallback(GLFWwindow *window, int drawableWidth,
                              int drawableHeight);
 void processInput(GLFWwindow *window);
-void start(ECS *ecs, ComponentMask *entityComponentMasks);
+int start(ECS *ecs, ComponentMask *entityComponentMasks);
 void update(ECS *ecs, ComponentMask *entityComponentMasks);
-void render(ECS *ecs);
+void render(ECS *ecs, uint shaderProgram);

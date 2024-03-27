@@ -28,7 +28,8 @@ int main(void) {
   double prevTime = glfwGetTime() * 1000;
   double lag = 0.0;
 
-  start(&ecs, entityComponentMasks);
+  uint shaderProgram;
+  shaderProgram = start(&ecs, entityComponentMasks);
 
   // main game loop
   while (!glfwWindowShouldClose(window)) {
@@ -51,7 +52,7 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT);
     // Render new data to back buffer
     // Swap Buffers
-    render(&ecs);
+    render(&ecs, shaderProgram);
 
     glfwSwapBuffers(window);
   }
@@ -61,15 +62,18 @@ int main(void) {
   return 0;
 }
 
-void start(ECS *ecs, ComponentMask *entityComponentMasks) {
+int start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
   physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
-  render_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
+  return render_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID,
+                                        entityComponentMasks);
 }
 
 void update(ECS *ecs, ComponentMask *entityComponentMasks) {}
 
-void render(ECS *ecs) { render_RenderComponent(ecs, PLAYER_ENTITY_ID); }
+void render(ECS *ecs, uint shaderProgram) {
+  render_RenderComponent(ecs, PLAYER_ENTITY_ID, shaderProgram);
+}
 
 void framebufferSizeCallback(GLFWwindow *window, int drawableWidth,
                              int drawableHeight) {
