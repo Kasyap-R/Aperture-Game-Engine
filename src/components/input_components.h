@@ -1,10 +1,13 @@
 #pragma once
+#include "../../include/Global.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef struct {
-  bool isAKeyPressed;
-  bool isDKeyPressed;
+  bool isAKeyPressed[MAX_ENTITIES];
+  bool isDKeyPressed[MAX_ENTITIES];
 } InputComponent;
 
 void initInputComponent(InputComponent *inputComponent);
-void setEntityInput(InputComponent *inputComponent, bool isAPressed, bool isDPressed);
+void setEntityInput(InputComponent *inputComponent, uint8_t entityID,
+                    bool isAPressed, bool isDPressed);

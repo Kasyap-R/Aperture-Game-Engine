@@ -9,10 +9,10 @@
 void render_RenderComponent(ECS *ecs, uint8_t entityID, uint shaderProgram) {
   glUseProgram(shaderProgram);
   unsigned int VAO = ecs->meshComponent->VAO[entityID];
-  unsigned int VBO = ecs->meshComponent->VBO[entityID];
   unsigned int numVerts = ecs->meshComponent->vertexCount[entityID];
   glBindVertexArray(VAO);
   glDrawArrays(GL_TRIANGLES, 0, numVerts);
+  glBindVertexArray(0);
 }
 
 uint render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
@@ -38,8 +38,11 @@ uint render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
 
   // We tell OpenGL how to interpret the data per vertex; each vertex is 3
   // values
+  // The first argument sets the location of the vertex attribute to 0 which is
+  // reflected by our shader setting "layout (location = 0)"
   glVertexAttribPointer(0, COMPONENTS_PER_VERTEX, GL_FLOAT, GL_FALSE,
                         COMPONENTS_PER_VERTEX * sizeof(float), (void *)0);
+  // We enable that array, giving the location as the argument
   glEnableVertexAttribArray(0);
 
   // Unbinds currently binded VBO/VAO
@@ -47,6 +50,8 @@ uint render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
   glBindVertexArray(0);
   addComponentToEntity(entityID, COMPONENT_MESH, entityComponentMasks);
   setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, VERTICES_PER_RECTANGE);
+  // TODO: get rid of this and make a material component instead of returning
+  // shaderProgram
   return compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
 }
 
@@ -95,7 +100,7 @@ unsigned int compileAndLinkShaders(char *vertexShaderPath,
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
 
-  // In future, have a material component
+  // TODO: In future, have a material component
   return shaderProgram;
 }
 

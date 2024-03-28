@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "ECS.h"
 
 #define PLAYER_ENTITY_ID 0
 
@@ -28,6 +29,8 @@ int main(void) {
   double prevTime = glfwGetTime() * 1000;
   double lag = 0.0;
 
+  // TODO: Add Material Component so we don't have to worry about passing this
+  // value back on forth
   uint shaderProgram;
   shaderProgram = start(&ecs, entityComponentMasks);
 
@@ -38,12 +41,10 @@ int main(void) {
     prevTime = currentTime;
     lag += deltaTime;
 
-    processInput(window);
-
     // Ensure game time catches up with real time
     while (lag >= MS_PER_UPDATE) {
       glfwPollEvents();
-      update(&ecs, entityComponentMasks);
+      update(&ecs, window, entityComponentMasks);
       lag -= MS_PER_UPDATE;
     }
 
@@ -64,12 +65,26 @@ int main(void) {
 
 int start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
+  // TODO: Find an elegant solution to setting entities as active
+  // Maybe do a check whenever you call addComponent()?
+  ecs->entityActive[PLAYER_ENTITY_ID] = true;
+  input_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
   physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
   return render_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID,
                                         entityComponentMasks);
 }
 
-void update(ECS *ecs, ComponentMask *entityComponentMasks) {}
+void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
+  for (uint8_t entityID = 0; entityID < MAX_ENTITIES; entityID++) {
+    if (!ecs->entityActive[entityID]) {
+      continue;
+    }
+    if (hasComponent(entityID, COMPONENT_INPUT, entityComponentMasks)) {
+      input_ProcessInput(ecs, window, PLAYER_ENTITY_ID);
+      physics_UpdatePlayerEntity(ecs, PLAYER_ENTITY_ID);
+    }
+  }
+}
 
 void render(ECS *ecs, uint shaderProgram) {
   render_RenderComponent(ecs, PLAYER_ENTITY_ID, shaderProgram);
