@@ -48,8 +48,33 @@ void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
                                     ComponentMask *entityComponentMasks) {
   // I assume the size of the vertices array here, must be fixed later
   float vertices[VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX];
-  unsigned int VBO, VAO;
-  setupRectangleGeometry(ecs, entityID, vertices, &VAO, &VBO);
+  unsigned int VBO;
+  unsigned int VAO;
+  float xPos = ecs->transformComponent->x[entityID];
+  float yPos = ecs->transformComponent->y[entityID];
+  float width = ecs->transformComponent->xScale[entityID];
+  float height = ecs->transformComponent->yScale[entityID];
+  int vertArraySize =
+      generateRectangleVertices(vertices, xPos, yPos, width, height);
+
+  glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBindVertexArray(VAO);
+  glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), &vertices,
+               GL_STATIC_DRAW);
+  // We tell OpenGL how to interpret the data per vertex; each vertex is 3
+  // values
+  // The first argument sets the location of the vertex attribute to 0 which is
+  // reflected by our shader setting "layout (location = 0)"
+  glVertexAttribPointer(0, COMPONENTS_PER_VERTEX, GL_FLOAT, GL_FALSE,
+                        COMPONENTS_PER_VERTEX * sizeof(float), (void *)0);
+  // We enable that array, giving the location as the argument
+  glEnableVertexAttribArray(0);
+  // Unbinds currently binded VBO/VAO
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
+
   unsigned int shaderProgramID =
       compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID, 0, 0, 0,
@@ -60,6 +85,8 @@ void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
 }
 
+// Currently doesn't work and produces weird shapes. Look into it later when you
+// actually need to have a function to do this
 void setupRectangleGeometry(ECS *ecs, uint8_t entityID, float *vertices,
                             unsigned int *VAO, unsigned int *VBO) {
   float xPos = ecs->transformComponent->x[entityID];
