@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -g --debug -Iinclude
-LDFLAGS = -lglfw -lGL -ldl
+LDFLAGS = -lglfw -lGL -ldl -lcglm
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin

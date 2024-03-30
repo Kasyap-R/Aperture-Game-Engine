@@ -1,5 +1,9 @@
 #include "renderer.h"
 #include "shaders.h"
+#include <cglm/affine.h>
+#include <cglm/cam.h>
+#include <cglm/mat4.h>
+#include <cglm/types.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -8,6 +12,29 @@
 
 void render_RenderComponent(ECS *ecs, uint8_t entityID, uint shaderProgram) {
   glUseProgram(shaderProgram);
+  // Calculate translation matrix (part of model matrix)
+  float xPrevPos = ecs->transformComponent->xPrev[entityID];
+  float yPrevPos = ecs->transformComponent->yPrev[entityID];
+  float xTargetPos = ecs->transformComponent->x[entityID];
+  float yTargetPos = ecs->transformComponent->y[entityID];
+  float translationX = xTargetPos - xPrevPos;
+  float translationY = yTargetPos - yPrevPos;
+  vec3 translation = {xTargetPos, yTargetPos, 0.0f};
+
+  mat4 translationMatrix;
+  glm_mat4_identity(translationMatrix); // start with identity matrix
+  glm_translate(translationMatrix, translation);
+  GLint transMatLocation = glGetUniformLocation(shaderProgram, "uTransMat");
+  glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
+                     (const GLfloat *)translationMatrix);
+
+  // Define view matrix
+  mat4 viewMatrix;
+  glm_mat4_identity(viewMatrix);
+
+  // Define Prjection Matrix
+  mat4 projectionMatrix;
+
   unsigned int VAO = ecs->meshComponent->VAO[entityID];
   unsigned int numVerts = ecs->meshComponent->vertexCount[entityID];
   glBindVertexArray(VAO);

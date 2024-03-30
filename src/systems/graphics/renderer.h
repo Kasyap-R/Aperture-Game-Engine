@@ -4,6 +4,7 @@
 #include "../../core/ECS.h"
 #include "../../core/Engine.h"
 #include "shaders.h"
+#include <cglm/cglm.h>
 #include <stdint.h>
 #include <sys/types.h>
 

@@ -1,10 +1,12 @@
 #pragma once
 
 #include "../../include/Global.h"
-#include <stdint.h>
 #include "string.h"
+#include <stdint.h>
 
 typedef struct {
+  float xPrev[MAX_ENTITIES];
+  float yPrev[MAX_ENTITIES];
   float x[MAX_ENTITIES];
   float y[MAX_ENTITIES];
   float xScale[MAX_ENTITIES];
@@ -22,4 +24,6 @@ void initTransformComponent(TransformComponent *tComponent);
 void setEntityVelocity(VelocityComponent *velocityComponent, uint8_t entityID,
                        float xVelocity, float yVelocity);
 void setEntityTransform(TransformComponent *transformComponent,
-                        uint8_t entityID, float xPosition, float yPosition, float xScale, float yScale, float rotation);
+                        uint8_t entityID, float xPrevPosition,
+                        float yPrevPosition, float xPosition, float yPosition,
+                        float xScale, float yScale, float rotation);
