@@ -4,10 +4,11 @@
 
 void physics_InstantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
                                      ComponentMask *entityComponentMasks) {
-  addComponentToEntity(playerEntityID, COMPONENT_INPUT, entityComponentMasks);
-  addComponentToEntity(playerEntityID, COMPONENT_VELOCITY,
+  addComponentToEntity(ecs, playerEntityID, COMPONENT_INPUT,
                        entityComponentMasks);
-  addComponentToEntity(playerEntityID, COMPONENT_TRANFORM,
+  addComponentToEntity(ecs, playerEntityID, COMPONENT_VELOCITY,
+                       entityComponentMasks);
+  addComponentToEntity(ecs, playerEntityID, COMPONENT_TRANFORM,
                        entityComponentMasks);
   float xPos = 0.5f;
   float yPos = 0.25f;
