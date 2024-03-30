@@ -22,17 +22,14 @@ int main(void) {
   // Setting the viewport to cover the whole window
   glViewport(0, 0, drawableWidth, drawableHeight);
 
-  ECS ecs;
-  initECS(&ecs);
+  ECS *ecs = malloc(sizeof(ECS));
+  initECS(ecs);
   ComponentMask entityComponentMasks[MAX_ENTITIES];
 
   double prevTime = glfwGetTime() * 1000;
   double lag = 0.0;
 
-  // TODO: Add Material Component so we don't have to worry about passing this
-  // value back on forth
-  uint shaderProgram;
-  shaderProgram = start(&ecs, entityComponentMasks);
+  start(ecs, entityComponentMasks);
 
   // main game loop
   while (!glfwWindowShouldClose(window)) {
@@ -44,7 +41,7 @@ int main(void) {
     // Ensure game time catches up with real time
     while (lag >= MS_PER_UPDATE) {
       glfwPollEvents();
-      update(&ecs, window, entityComponentMasks);
+      update(ecs, window, entityComponentMasks);
       lag -= MS_PER_UPDATE;
     }
 
@@ -53,16 +50,18 @@ int main(void) {
     glClear(GL_COLOR_BUFFER_BIT);
     // Render new data to back buffer
     // Swap Buffers
-    render(&ecs, shaderProgram);
+    render(ecs);
 
     glfwSwapBuffers(window);
   }
 
+  free(ecs);
   // Deletes all of GLFW's allocated resources
   glfwTerminate();
   return 0;
 }
 
+// Return value is success code
 int start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
   // TODO: Find an elegant solution to setting entities as active
@@ -70,8 +69,8 @@ int start(ECS *ecs, ComponentMask *entityComponentMasks) {
   ecs->entityActive[PLAYER_ENTITY_ID] = true;
   input_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
   physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
-  return render_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID,
-                                        entityComponentMasks);
+  render_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
+  return 0;
 }
 
 void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
@@ -86,9 +85,7 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
   }
 }
 
-void render(ECS *ecs, uint shaderProgram) {
-  render_RenderComponent(ecs, PLAYER_ENTITY_ID, shaderProgram);
-}
+void render(ECS *ecs) { render_RenderComponent(ecs, PLAYER_ENTITY_ID); }
 
 void framebufferSizeCallback(GLFWwindow *window, int drawableWidth,
                              int drawableHeight) {

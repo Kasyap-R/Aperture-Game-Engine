@@ -10,8 +10,10 @@
 #define COMPONENTS_PER_VERTEX 3
 #define VERTICES_PER_RECTANGE 6
 
-void render_RenderComponent(ECS *ecs, uint8_t entityID, uint shaderProgram) {
-  glUseProgram(shaderProgram);
+void render_RenderComponent(ECS *ecs, uint8_t entityID) {
+  unsigned int shaderProgramID =
+      ecs->materialComponent->shaderProgramID[entityID];
+  glUseProgram(shaderProgramID);
   // Calculate translation matrix (part of model matrix)
   float xPrevPos = ecs->transformComponent->xPrev[entityID];
   float yPrevPos = ecs->transformComponent->yPrev[entityID];
@@ -24,7 +26,7 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID, uint shaderProgram) {
   mat4 translationMatrix;
   glm_mat4_identity(translationMatrix); // start with identity matrix
   glm_translate(translationMatrix, translation);
-  GLint transMatLocation = glGetUniformLocation(shaderProgram, "uTransMat");
+  GLint transMatLocation = glGetUniformLocation(shaderProgramID, "uTransMat");
   glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
                      (const GLfloat *)translationMatrix);
 
@@ -42,27 +44,25 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID, uint shaderProgram) {
   glBindVertexArray(0);
 }
 
-uint render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
+void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
                                     ComponentMask *entityComponentMasks) {
   // I assume the size of the vertices array here, must be fixed later
   float vertices[VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX];
+  unsigned int VBO;
+  unsigned int VAO;
   float xPos = ecs->transformComponent->x[entityID];
   float yPos = ecs->transformComponent->y[entityID];
   float width = ecs->transformComponent->xScale[entityID];
   float height = ecs->transformComponent->yScale[entityID];
-
   int vertArraySize =
       generateRectangleVertices(vertices, xPos, yPos, width, height);
 
-  unsigned int VBO, VAO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
-
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBindVertexArray(VAO);
   glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), &vertices,
                GL_STATIC_DRAW);
-
   // We tell OpenGL how to interpret the data per vertex; each vertex is 3
   // values
   // The first argument sets the location of the vertex attribute to 0 which is
@@ -71,15 +71,48 @@ uint render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
                         COMPONENTS_PER_VERTEX * sizeof(float), (void *)0);
   // We enable that array, giving the location as the argument
   glEnableVertexAttribArray(0);
-
   // Unbinds currently binded VBO/VAO
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
-  addComponentToEntity(entityID, COMPONENT_MESH, entityComponentMasks);
+
+  unsigned int shaderProgramID =
+      compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
+  setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID, 0, 0, 0,
+                    0);
+
   setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, VERTICES_PER_RECTANGE);
-  // TODO: get rid of this and make a material component instead of returning
-  // shaderProgram
-  return compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
+  addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
+  addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
+}
+
+// Currently doesn't work and produces weird shapes. Look into it later when you
+// actually need to have a function to do this
+void setupRectangleGeometry(ECS *ecs, uint8_t entityID, float *vertices,
+                            unsigned int *VAO, unsigned int *VBO) {
+  float xPos = ecs->transformComponent->x[entityID];
+  float yPos = ecs->transformComponent->y[entityID];
+  float width = ecs->transformComponent->xScale[entityID];
+  float height = ecs->transformComponent->yScale[entityID];
+  int vertArraySize =
+      generateRectangleVertices(vertices, xPos, yPos, width, height);
+
+  glGenVertexArrays(1, VAO);
+  glGenBuffers(1, VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, *VBO);
+  glBindVertexArray(*VAO);
+  glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), &vertices,
+               GL_STATIC_DRAW);
+  // We tell OpenGL how to interpret the data per vertex; each vertex is 3
+  // values
+  // The first argument sets the location of the vertex attribute to 0 which is
+  // reflected by our shader setting "layout (location = 0)"
+  glVertexAttribPointer(0, COMPONENTS_PER_VERTEX, GL_FLOAT, GL_FALSE,
+                        COMPONENTS_PER_VERTEX * sizeof(float), (void *)0);
+  // We enable that array, giving the location as the argument
+  glEnableVertexAttribArray(0);
+  // Unbinds currently binded VBO/VAO
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindVertexArray(0);
 }
 
 unsigned int compileAndLinkShaders(char *vertexShaderPath,
@@ -114,21 +147,20 @@ unsigned int compileAndLinkShaders(char *vertexShaderPath,
   free(fragmentShaderSource_heap);
 
   // Linking Shader Program
-  GLuint shaderProgram = glCreateProgram();
-  glAttachShader(shaderProgram, vertexShader);
-  glAttachShader(shaderProgram, fragmentShader);
-  glLinkProgram(shaderProgram);
-  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+  GLuint shaderProgramID = glCreateProgram();
+  glAttachShader(shaderProgramID, vertexShader);
+  glAttachShader(shaderProgramID, fragmentShader);
+  glLinkProgram(shaderProgramID);
+  glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &success);
   if (!success) {
-    glGetShaderInfoLog(shaderProgram, 512, NULL, infoLog);
+    glGetShaderInfoLog(shaderProgramID, 512, NULL, infoLog);
     printf("ERROR::SHADER::VERTEX|FRAGMENT::LINKING_FAILED\n%s\n", infoLog);
   }
 
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
 
-  // TODO: In future, have a material component
-  return shaderProgram;
+  return shaderProgramID;
 }
 
 // TODO: Update this to support rotation when needed
