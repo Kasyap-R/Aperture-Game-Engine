@@ -22,7 +22,8 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID) {
   float translationX = xTargetPos - xPrevPos;
   float translationY = yTargetPos - yPrevPos;
   vec3 translation = {xTargetPos, yTargetPos, 0.0f};
-
+  printf("X Position: %.8f\nY Position: %.8f\n===============\n", xTargetPos,
+         yTargetPos);
   mat4 translationMatrix;
   glm_mat4_identity(translationMatrix); // start with identity matrix
   glm_translate(translationMatrix, translation);
