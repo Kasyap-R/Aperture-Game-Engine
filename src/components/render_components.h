@@ -10,10 +10,10 @@ typedef struct {
 
 typedef struct {
   unsigned int shaderProgramID[MAX_ENTITIES];
-  uint8_t rValue[MAX_ENTITIES];
-  uint8_t gValue[MAX_ENTITIES];
-  uint8_t bValue[MAX_ENTITIES];
-  uint8_t aValue[MAX_ENTITIES];
+  float rValue[MAX_ENTITIES];
+  float gValue[MAX_ENTITIES];
+  float bValue[MAX_ENTITIES];
+  float aValue[MAX_ENTITIES];
 } MaterialComponent;
 
 void initMeshComponent(MeshComponent *mComponent);
@@ -22,5 +22,5 @@ void setEntityMesh(MeshComponent *mComponent, uint8_t entityID,
                    unsigned int VAO, unsigned int VBO,
                    unsigned int vertexCount);
 void setEntityMaterial(MaterialComponent *matComponent, uint8_t entityID,
-                       unsigned int shaderProgramID, uint8_t rValue,
-                       uint8_t gValue, uint8_t bValue, uint8_t aValue);
+                       unsigned int shaderProgramID, float rValue, float gValue,
+                       float bValue, float aValue);

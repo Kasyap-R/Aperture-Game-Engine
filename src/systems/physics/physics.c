@@ -10,7 +10,7 @@ void physics_InstantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
                        entityComponentMasks);
   addComponentToEntity(ecs, playerEntityID, COMPONENT_TRANFORM,
                        entityComponentMasks);
-  float xPos = 0.1f;
+  float xPos = 0.0f;
   float yPos = -0.25f;
   float width = 0.3f;
   float height = 0.1f;
