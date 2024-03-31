@@ -9,6 +9,54 @@ void setUniform4f(unsigned int shaderProgramID, char *uniformName, float float1,
   glUniform4f(location, float1, float2, float3, float4);
 }
 
+unsigned int compileAndLinkShaders(char *vertexShaderPath,
+                                   char *fragmentShaderPath) {
+  // Compiling Shader
+  char *vertexShaderSource_heap = loadShaderSource(vertexShaderPath);
+  char *fragmentShaderSource_heap = loadShaderSource(fragmentShaderPath);
+  GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+  const GLchar *source = vertexShaderSource_heap;
+  glShaderSource(vertexShader, 1, &source, NULL);
+  glCompileShader(vertexShader);
+
+  GLint success;
+  GLchar infoLog[512];
+  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+    printf("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n%s\n", infoLog);
+  }
+
+  GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  source = fragmentShaderSource_heap;
+  glShaderSource(fragmentShader, 1, &source, NULL);
+  glCompileShader(fragmentShader);
+  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+    printf("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n%s\n", infoLog);
+  }
+
+  free(vertexShaderSource_heap);
+  free(fragmentShaderSource_heap);
+
+  // Linking Shader Program
+  GLuint shaderProgramID = glCreateProgram();
+  glAttachShader(shaderProgramID, vertexShader);
+  glAttachShader(shaderProgramID, fragmentShader);
+  glLinkProgram(shaderProgramID);
+  glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &success);
+  if (!success) {
+    glGetShaderInfoLog(shaderProgramID, 512, NULL, infoLog);
+    printf("ERROR::SHADER::VERTEX|FRAGMENT::LINKING_FAILED\n%s\n", infoLog);
+  }
+
+  glDeleteShader(vertexShader);
+  glDeleteShader(fragmentShader);
+
+  return shaderProgramID;
+}
+
 char *loadShaderSource(char *filename) {
   FILE *file;
   char ch;
