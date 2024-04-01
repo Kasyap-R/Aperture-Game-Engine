@@ -5,4 +5,4 @@
 #include "../../../src/core/Engine.h"
 
 // In the future, this should be passed some sort of texture/sprite component
-unsigned int loadTexture(ECS *ecs, char *textureName);
+unsigned int loadTexture(char *textureName);

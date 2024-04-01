@@ -1,6 +1,6 @@
 #include "textures.h"
 
-unsigned int loadTexture(ECS *ecs, char *textureName) {
+unsigned int loadTexture(char *textureName) {
   // Set up Texture
   unsigned int texture;
   glGenTextures(1, &texture);
@@ -19,7 +19,7 @@ unsigned int loadTexture(ECS *ecs, char *textureName) {
 
   printf("Width: %d\nHeight: %d\n", width, height);
   if (data_heap) {
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, data_heap);
   } else {
     printf("Failed to load texture");

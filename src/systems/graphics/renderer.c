@@ -19,28 +19,34 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID) {
       ecs->materialComponent->shaderProgramID[entityID];
   glUseProgram(shaderProgramID);
   // Calculate translation matrix (part of model matrix)
-  float xTargetPos = ecs->transformComponent->x[entityID];
-  float yTargetPos = ecs->transformComponent->y[entityID];
-  float rValue = ecs->materialComponent->rValue[entityID];
-  float gValue = ecs->materialComponent->gValue[entityID];
-  float bValue = ecs->materialComponent->bValue[entityID];
-  float aValue = ecs->materialComponent->aValue[entityID];
-  // This sets the initial position to the 2 * starting position as I translate
-  // it by this amount I could solve this by setting the initial value and
-  // subtracting from that or I could just set up a better system where I
-  // actually define a coordinate system and accurately convert that to NDC
-  vec3 translation = {xTargetPos, yTargetPos, 0.0f};
-  mat4 translationMatrix;
-  glm_mat4_identity(translationMatrix); // start with identity matrix
-  glm_translate(translationMatrix, translation);
-  GLint transMatLocation = glGetUniformLocation(shaderProgramID, "uTransMat");
-  glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
-                     (const GLfloat *)translationMatrix);
-  // Set color
-  setUniformVector4f(shaderProgramID, "uColor", rValue, gValue, bValue, aValue);
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, textureID);
+  {
+    float xTargetPos = ecs->transformComponent->x[entityID];
+    float yTargetPos = ecs->transformComponent->y[entityID];
+    vec3 translation = {xTargetPos, yTargetPos, 0.0f};
+    mat4 translationMatrix;
+    glm_mat4_identity(translationMatrix); // start with identity matrix
+    glm_translate(translationMatrix, translation);
+    GLint transMatLocation = glGetUniformLocation(shaderProgramID, "uTransMat");
+    // This sets the initial position to the 2 * starting position as I
+    // translate it by this amount I could solve this by setting the initial
+    // value and subtracting from that or I could just set up a better system
+    // where I actually define a coordinate system and accurately convert that
+    // to NDC
+    glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
+                       (const GLfloat *)translationMatrix);
+  }
+  {
+    float rValue = ecs->materialComponent->rValue[entityID];
+    float gValue = ecs->materialComponent->gValue[entityID];
+    float bValue = ecs->materialComponent->bValue[entityID];
+    float aValue = ecs->materialComponent->aValue[entityID];
+    setUniformVector4f(shaderProgramID, "uColor", rValue, gValue, bValue,
+                       aValue);
+  }
+  {
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+  }
 
   unsigned int VAO = ecs->meshComponent->VAO[entityID];
   unsigned int numVerts = ecs->meshComponent->vertexCount[entityID];
@@ -56,6 +62,7 @@ void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
   float vertices[vertArraySize];
   unsigned int VAO, VBO;
 
+  // Initialize VAO/VBO
   setupRectangleGeometry(ecs->transformComponent, entityID, vertices, &VAO,
                          &VBO);
 
@@ -68,37 +75,42 @@ void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
 
-  textureID = loadTexture(ecs, "textures/platform_texture.png");
+  textureID = loadTexture("textures/platform_texture.png");
 }
 
 void setupRectangleGeometry(TransformComponent *transformComponent,
                             uint8_t entityID, float *vertices,
                             unsigned int *VAO, unsigned int *VBO) {
-  float xPos = transformComponent->x[entityID];
-  float yPos = transformComponent->y[entityID];
-  float width = transformComponent->xScale[entityID];
-  float height = transformComponent->yScale[entityID];
+  int vertArraySize;
+  {
+    float xPos = transformComponent->x[entityID];
+    float yPos = transformComponent->y[entityID];
+    float width = transformComponent->xScale[entityID];
+    float height = transformComponent->yScale[entityID];
 
-  float posCoordsPerVertex = 3;
-  float texCoordsPerVertex = 2;
-  int sizeOfVertex = COMPONENTS_PER_VERTEX * sizeof(float);
-  uint8_t texCoordOffset = 3;
-
-  int vertArraySize =
-      generateRectangleVertices(vertices, xPos, yPos, width, height);
-  // Set up VBO/VAO with data and data format respectively
-  glGenVertexArrays(1, VAO);
-  glGenBuffers(1, VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, *VBO);
-  glBindVertexArray(*VAO);
-  glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), vertices,
-               GL_STATIC_DRAW);
-  glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE, sizeOfVertex,
-                        (void *)0);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, texCoordsPerVertex, GL_FLOAT, GL_FALSE, sizeOfVertex,
-                        (void *)(texCoordOffset * sizeof(float)));
-  glEnableVertexAttribArray(1);
+    vertArraySize =
+        generateRectangleVertices(vertices, xPos, yPos, width, height);
+  }
+  {
+    float posCoordsPerVertex = 3;
+    float texCoordsPerVertex = 2;
+    int sizeOfVertex = COMPONENTS_PER_VERTEX * sizeof(float);
+    uint8_t texCoordOffset = 3;
+    // Set up VBO/VAO with data and data format respectively
+    glGenVertexArrays(1, VAO);
+    glGenBuffers(1, VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, *VBO);
+    glBindVertexArray(*VAO);
+    glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), vertices,
+                 GL_STATIC_DRAW);
+    glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
+                          sizeOfVertex, (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, texCoordsPerVertex, GL_FLOAT, GL_FALSE,
+                          sizeOfVertex,
+                          (void *)(texCoordOffset * sizeof(float)));
+    glEnableVertexAttribArray(1);
+  }
 }
 
 // TODO: Update this to support rotation when needed
