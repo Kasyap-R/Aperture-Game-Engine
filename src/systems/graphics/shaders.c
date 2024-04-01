@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-void setUniform4f(unsigned int shaderProgramID, char *uniformName, float float1,
-                  float float2, float float3, float float4) {
+void setUniformVector4f(unsigned int shaderProgramID, char *uniformName,
+                        float float1, float float2, float float3,
+                        float float4) {
   int location = glGetUniformLocation(shaderProgramID, uniformName);
   glUniform4f(location, float1, float2, float3, float4);
 }

@@ -16,7 +16,8 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID);
 int generateRectangleVertices(float *vertices, float x, float y, float width,
                               float height);
 
-void setupRectangleGeometry(ECS *ecs, uint8_t entityID, float *vertices,
+void setupRectangleGeometry(TransformComponent *transformComponent,
+                            uint8_t entityID, float *vertices,
                             unsigned int *VAO, unsigned int *VBO);
 
 unsigned int compileAndLinkShaders(char *vertexShaderPath,

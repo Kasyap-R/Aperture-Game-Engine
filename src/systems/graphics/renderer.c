@@ -1,13 +1,18 @@
 #include "renderer.h"
+#include "../../../lib/stb_image.h"
+#include "../../debug/debug.h"
 #include "shaders.h"
+#include "textures.h"
 #include <cglm/affine.h>
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
 #include <cglm/types.h>
 #include <string.h>
 
-#define COMPONENTS_PER_VERTEX 3
+#define COMPONENTS_PER_VERTEX 5
 #define VERTICES_PER_RECTANGE 6
+
+static int textureID;
 
 void render_RenderComponent(ECS *ecs, uint8_t entityID) {
   unsigned int shaderProgramID =
@@ -32,13 +37,10 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID) {
   glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
                      (const GLfloat *)translationMatrix);
   // Set color
-  setUniform4f(shaderProgramID, "uColor", rValue, gValue, bValue, aValue);
-  // Define view matrix
-  mat4 viewMatrix;
-  glm_mat4_identity(viewMatrix);
+  setUniformVector4f(shaderProgramID, "uColor", rValue, gValue, bValue, aValue);
 
-  // Define Prjection Matrix
-  mat4 projectionMatrix;
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, textureID);
 
   unsigned int VAO = ecs->meshComponent->VAO[entityID];
   unsigned int numVerts = ecs->meshComponent->vertexCount[entityID];
@@ -49,74 +51,54 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID) {
 
 void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
                                     ComponentMask *entityComponentMasks) {
-  // I assume the size of the vertices array here, must be fixed later
-  float vertices[VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX];
-  unsigned int VBO;
-  unsigned int VAO;
-  float xPos = ecs->transformComponent->x[entityID];
-  float yPos = ecs->transformComponent->y[entityID];
-  float width = ecs->transformComponent->xScale[entityID];
-  float height = ecs->transformComponent->yScale[entityID];
-  int vertArraySize =
-      generateRectangleVertices(vertices, xPos, yPos, width, height);
+  // Currently assumign array size, should prob change in future
+  int vertArraySize = VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX;
+  float vertices[vertArraySize];
+  unsigned int VAO, VBO;
 
-  glGenVertexArrays(1, &VAO);
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBindVertexArray(VAO);
-  glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), &vertices,
-               GL_STATIC_DRAW);
-  // We tell OpenGL how to interpret the data per vertex; each vertex is 3
-  // values
-  // The first argument sets the location of the vertex attribute to 0 which is
-  // reflected by our shader setting "layout (location = 0)"
-  glVertexAttribPointer(0, COMPONENTS_PER_VERTEX, GL_FLOAT, GL_FALSE,
-                        COMPONENTS_PER_VERTEX * sizeof(float), (void *)0);
-  // We enable that array, giving the location as the argument
-  glEnableVertexAttribArray(0);
-  // Unbinds currently binded VBO/VAO
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
+  setupRectangleGeometry(ecs->transformComponent, entityID, vertices, &VAO,
+                         &VBO);
 
   unsigned int shaderProgramID =
       compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
+
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID, 0.29,
                     0.0, 0.51, 1.0);
-
   setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, VERTICES_PER_RECTANGE);
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
+
+  textureID = loadTexture(ecs, "textures/platform_texture.png");
 }
 
-// Currently doesn't work and produces weird shapes. Look into it later when you
-// actually need to have a function to do this
-// >>>>>>>>>>>>>UNUSED FUNCTION<<<<<<<<<<<< Red
-void setupRectangleGeometry(ECS *ecs, uint8_t entityID, float *vertices,
+void setupRectangleGeometry(TransformComponent *transformComponent,
+                            uint8_t entityID, float *vertices,
                             unsigned int *VAO, unsigned int *VBO) {
-  float xPos = ecs->transformComponent->x[entityID];
-  float yPos = ecs->transformComponent->y[entityID];
-  float width = ecs->transformComponent->xScale[entityID];
-  float height = ecs->transformComponent->yScale[entityID];
+  float xPos = transformComponent->x[entityID];
+  float yPos = transformComponent->y[entityID];
+  float width = transformComponent->xScale[entityID];
+  float height = transformComponent->yScale[entityID];
+
+  float posCoordsPerVertex = 3;
+  float texCoordsPerVertex = 2;
+  int sizeOfVertex = COMPONENTS_PER_VERTEX * sizeof(float);
+  uint8_t texCoordOffset = 3;
+
   int vertArraySize =
       generateRectangleVertices(vertices, xPos, yPos, width, height);
-
+  // Set up VBO/VAO with data and data format respectively
   glGenVertexArrays(1, VAO);
   glGenBuffers(1, VBO);
   glBindBuffer(GL_ARRAY_BUFFER, *VBO);
   glBindVertexArray(*VAO);
-  glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), &vertices,
+  glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), vertices,
                GL_STATIC_DRAW);
-  // We tell OpenGL how to interpret the data per vertex; each vertex is 3
-  // values
-  // The first argument sets the location of the vertex attribute to 0 which is
-  // reflected by our shader setting "layout (location = 0)"
-  glVertexAttribPointer(0, COMPONENTS_PER_VERTEX, GL_FLOAT, GL_FALSE,
-                        COMPONENTS_PER_VERTEX * sizeof(float), (void *)0);
-  // We enable that array, giving the location as the argument
+  glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE, sizeOfVertex,
+                        (void *)0);
   glEnableVertexAttribArray(0);
-  // Unbinds currently binded VBO/VAO
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindVertexArray(0);
+  glVertexAttribPointer(1, texCoordsPerVertex, GL_FLOAT, GL_FALSE, sizeOfVertex,
+                        (void *)(texCoordOffset * sizeof(float)));
+  glEnableVertexAttribArray(1);
 }
 
 // TODO: Update this to support rotation when needed
@@ -125,13 +107,13 @@ int generateRectangleVertices(float *vertices, float x, float y, float width,
   float halfWidth = width / 2;
   float halfHeight = height / 2;
   float rectangeVertices[] = {
-      x - halfWidth, y + halfHeight, 0.0f, // Top-left
-      x - halfWidth, y - halfHeight, 0.0f, // Bottom-left
-      x + halfWidth, y - halfHeight, 0.0f, // Bottom-right
+      x - halfWidth, y + halfHeight, 0.0f, 0.0f, 1.0f, // Top-left
+      x - halfWidth, y - halfHeight, 0.0f, 0.0f, 0.0f, // Bottom-left
+      x + halfWidth, y - halfHeight, 0.0f, 1.0f, 0.0f, // Bottom-right
 
-      x - halfWidth, y + halfHeight, 0.0f, // Top-left
-      x + halfWidth, y - halfHeight, 0.0f, // Bottom-right
-      x + halfWidth, y + halfHeight, 0.0f  // Top-right
+      x - halfWidth, y + halfHeight, 0.0f, 0.0f, 1.0f, // Top-left
+      x + halfWidth, y - halfHeight, 0.0f, 1.0f, 0.0f, // Bottom-right
+      x + halfWidth, y + halfHeight, 0.0f, 1.0f, 1.0f, // Top-right
   };
   int vertArraySize = VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX;
   memcpy(vertices, rectangeVertices, vertArraySize * sizeof(float));
