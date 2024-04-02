@@ -9,7 +9,7 @@ SOURCES := $(shell find $(SRC_DIR) -name '*.c')
 OBJECTS := $(SOURCES:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 TARGET = $(BIN_DIR)/aperture
 
-.PHONY: all clean
+.PHONY: all clean 
 
 all: $(TARGET)
 

@@ -36,12 +36,12 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID) {
                        (const GLfloat *)translationMatrix);
   }
   {
-    float rValue = ecs->materialComponent->rValue[entityID];
+    /* float rValue = ecs->materialComponent->rValue[entityID];
     float gValue = ecs->materialComponent->gValue[entityID];
     float bValue = ecs->materialComponent->bValue[entityID];
-    float aValue = ecs->materialComponent->aValue[entityID];
-    setUniformVector4f(shaderProgramID, "uColor", rValue, gValue, bValue,
-                       aValue);
+    float aValue = ecs->materialComponent->aValue[entityID]; */
+    // Only applicable to entities who are of the shader type "SHADER_COLORED"
+    setUniformVector4f(shaderProgramID, "uColor", 0.29, 0.0, 0.1, 1.0);
   }
   {
     glActiveTexture(GL_TEXTURE0);
@@ -69,13 +69,16 @@ void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
   unsigned int shaderProgramID =
       compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
 
+  textureID = loadTexture("textures/platform_texture.png");
+
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID, 0.29,
-                    0.0, 0.51, 1.0, 0);
+                    0.0, 0.51, 1.0, SHADER_TEXTURED);
   setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, VERTICES_PER_RECTANGE);
+  setEntitySprite(ecs->spriteComponent, entityID, textureID);
+
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
-
-  textureID = loadTexture("textures/platform_texture.png");
+  addComponentToEntity(ecs, entityID, COMPONENT_SPRITE, entityComponentMasks);
 }
 
 void setupRectangleGeometry(TransformComponent *transformComponent,

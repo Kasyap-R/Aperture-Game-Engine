@@ -1,17 +1,15 @@
 #include "render_components.h"
 #include "string.h"
 
-void initMeshComponent(MeshComponent *mComponent) {
-  memset(mComponent->vertexCount, 0, sizeof(mComponent->vertexCount));
+void initMeshComponent(MeshComponent *meshComponent) {
+  memset(meshComponent->vertexCount, 0, sizeof(meshComponent->vertexCount));
 }
 
-void initMaterialComponent(MaterialComponent *matComponent) {
-  memset(matComponent->shaderProgramID, 0,
-         sizeof(matComponent->shaderProgramID));
-  memset(matComponent->rValue, 0, sizeof(matComponent->rValue));
-  memset(matComponent->gValue, 0, sizeof(matComponent->gValue));
-  memset(matComponent->bValue, 0, sizeof(matComponent->bValue));
-  memset(matComponent->aValue, 0, sizeof(matComponent->aValue));
+void initMaterialComponent(MaterialComponent *materialComponent) {
+  memset(materialComponent->shaderProgramID, 0,
+         sizeof(materialComponent->shaderProgramID));
+  memset(materialComponent->shaderType, -1,
+         sizeof(materialComponent->shaderType));
 }
 
 void initColorComponent(ColorComponent *colorComponent) {
@@ -25,23 +23,19 @@ void initSpriteComponent(SpriteComponent *spriteComponent) {
   memset(spriteComponent->textureID, 0, sizeof(spriteComponent->textureID));
 }
 
-void setEntityMesh(MeshComponent *mComponent, uint8_t entityID,
+void setEntityMesh(MeshComponent *meshComponent, uint8_t entityID,
                    unsigned int VAO, unsigned int VBO,
                    unsigned int vertexCount) {
-  mComponent->VAO[entityID] = VAO;
-  mComponent->VBO[entityID] = VBO;
-  mComponent->vertexCount[entityID] = vertexCount;
+  meshComponent->VAO[entityID] = VAO;
+  meshComponent->VBO[entityID] = VBO;
+  meshComponent->vertexCount[entityID] = vertexCount;
 }
 
-void setEntityMaterial(MaterialComponent *matComponent, uint8_t entityID,
+void setEntityMaterial(MaterialComponent *materialComponent, uint8_t entityID,
                        unsigned int shaderProgramID, float rValue, float gValue,
                        float bValue, float aValue, ShaderType shaderType) {
-  matComponent->shaderProgramID[entityID] = shaderProgramID;
-  matComponent->rValue[entityID] = rValue;
-  matComponent->gValue[entityID] = gValue;
-  matComponent->bValue[entityID] = bValue;
-  matComponent->aValue[entityID] = aValue;
-  matComponent->shaderType[entityID] = shaderType;
+  materialComponent->shaderProgramID[entityID] = shaderProgramID;
+  materialComponent->shaderType[entityID] = shaderType;
 }
 
 void setEntityColor(ColorComponent *colorComponent, u8 entityID, f32 rValue,
