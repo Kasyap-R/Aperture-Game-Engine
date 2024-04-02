@@ -64,8 +64,6 @@ int main(void) {
 // Return value is success code
 int start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
-  // TODO: Find an elegant solution to setting entities as active
-  // Maybe do a check whenever you call addComponent()?
   input_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
   physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
   render_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);

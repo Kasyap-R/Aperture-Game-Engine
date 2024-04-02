@@ -2,6 +2,11 @@
 #include "../../include/Global.h"
 #include <stdint.h>
 
+typedef enum {
+  SHADER_COLORED,
+  SHADER_TEXTURED,
+} ShaderType;
+
 typedef struct {
   unsigned int VAO[MAX_ENTITIES];
   unsigned int VBO[MAX_ENTITIES];
@@ -14,6 +19,7 @@ typedef struct {
   float gValue[MAX_ENTITIES];
   float bValue[MAX_ENTITIES];
   float aValue[MAX_ENTITIES];
+  ShaderType shaderType[MAX_ENTITIES];
 } MaterialComponent;
 
 typedef struct {
@@ -36,7 +42,7 @@ void setEntityMesh(MeshComponent *mComponent, uint8_t entityID,
                    unsigned int vertexCount);
 void setEntityMaterial(MaterialComponent *matComponent, uint8_t entityID,
                        unsigned int shaderProgramID, float rValue, float gValue,
-                       float bValue, float aValue);
+                       float bValue, float aValue, ShaderType shaderType);
 void setEntityColor(ColorComponent *colorComponent, u8 entityID, f32 rValue,
                     f32 gValue, f32 bValue, f32 aValue);
 void setEntitySprite(SpriteComponent *spriteComponent, u8 entityID,

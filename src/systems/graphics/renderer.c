@@ -70,7 +70,7 @@ void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
       compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
 
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID, 0.29,
-                    0.0, 0.51, 1.0);
+                    0.0, 0.51, 1.0, 0);
   setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, VERTICES_PER_RECTANGE);
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
