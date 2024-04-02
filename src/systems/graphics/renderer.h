@@ -8,17 +8,16 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
+void render_InstantiatePlayerEntity(ECS *ecs, EntityID entityID,
                                     ComponentMask *entityComponentMasks);
 
-void render_RenderComponent(ECS *ecs, uint8_t entityID);
+void render_RenderComponent(ECS *ecs, EntityID entityID);
 
-int generateRectangleVertices(float *vertices, float x, float y, float width,
-                              float height);
+int generateRectangleVertices(f32 *vertices, f32 x, f32 y, f32 width,
+                              f32 height);
 
 void setupRectangleGeometry(TransformComponent *transformComponent,
-                            uint8_t entityID, float *vertices,
-                            unsigned int *VAO, unsigned int *VBO);
+                            EntityID entityID, f32 *vertices, u32 *VAO,
+                            u32 *VBO);
 
-unsigned int compileAndLinkShaders(char *vertexShaderPath,
-                                   char *fragmentShaderPath);
+u32 compileAndLinkShaders(char *vertexShaderPath, char *fragmentShaderPath);

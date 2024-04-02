@@ -1,8 +1,8 @@
 #include "textures.h"
 
-unsigned int loadTexture(char *textureName) {
+u32 loadTexture(char *textureName) {
   // Set up Texture
-  unsigned int texture;
+  u32 texture;
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
   // Define how texture should repeat when the texture coordinates are outisde
@@ -13,7 +13,7 @@ unsigned int loadTexture(char *textureName) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-  int width, height, nrChannels;
+  i32 width, height, nrChannels;
   unsigned char *data_heap =
       stbi_load(textureName, &width, &height, &nrChannels, 0);
 

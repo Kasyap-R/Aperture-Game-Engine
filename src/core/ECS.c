@@ -1,11 +1,11 @@
 #include "ECS.h"
 
-bool hasComponent(uint8_t entityID, ComponentType type,
+bool hasComponent(EntityID entityID, ComponentType type,
                   ComponentMask *entityComponentMasks) {
   return entityComponentMasks[entityID] & (1 << type);
 }
 
-void addComponentToEntity(ECS *ecs, uint8_t entityID, ComponentType type,
+void addComponentToEntity(ECS *ecs, EntityID entityID, ComponentType type,
                           ComponentMask *entityComponentMasks) {
   ecs->entityActive[entityID] = true;
   // type represents which bit a component is represented by
@@ -15,7 +15,7 @@ void addComponentToEntity(ECS *ecs, uint8_t entityID, ComponentType type,
   entityComponentMasks[entityID] |= (1 << type);
 }
 
-void removeComponentFromEntity(ECS *ecs, uint8_t entityID, ComponentType type,
+void removeComponentFromEntity(ECS *ecs, EntityID entityID, ComponentType type,
                                ComponentMask *entityComponentMasks) {
   // Here we move a 1 to the position of the type then turn that into a zero and
   // everything else into a one. We then AND everything with 1 to return the

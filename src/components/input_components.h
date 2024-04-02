@@ -9,5 +9,5 @@ typedef struct {
 } InputComponent;
 
 void initInputComponent(InputComponent *inputComponent);
-void setEntityInput(InputComponent *inputComponent, uint8_t entityID,
+void setEntityInput(InputComponent *inputComponent, EntityID entityID,
                     bool isAPressed, bool isDPressed);

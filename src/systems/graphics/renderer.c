@@ -12,16 +12,15 @@
 #define COMPONENTS_PER_VERTEX 5
 #define VERTICES_PER_RECTANGE 6
 
-static int textureID;
+static i32 textureID;
 
-void render_RenderComponent(ECS *ecs, uint8_t entityID) {
-  unsigned int shaderProgramID =
-      ecs->materialComponent->shaderProgramID[entityID];
+void render_RenderComponent(ECS *ecs, EntityID entityID) {
+  u32 shaderProgramID = ecs->materialComponent->shaderProgramID[entityID];
   glUseProgram(shaderProgramID);
   // Calculate translation matrix (part of model matrix)
   {
-    float xTargetPos = ecs->transformComponent->x[entityID];
-    float yTargetPos = ecs->transformComponent->y[entityID];
+    f32 xTargetPos = ecs->transformComponent->x[entityID];
+    f32 yTargetPos = ecs->transformComponent->y[entityID];
     vec3 translation = {xTargetPos, yTargetPos, 0.0f};
     mat4 translationMatrix;
     glm_mat4_identity(translationMatrix); // start with identity matrix
@@ -36,10 +35,10 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID) {
                        (const GLfloat *)translationMatrix);
   }
   {
-    /* float rValue = ecs->materialComponent->rValue[entityID];
-    float gValue = ecs->materialComponent->gValue[entityID];
-    float bValue = ecs->materialComponent->bValue[entityID];
-    float aValue = ecs->materialComponent->aValue[entityID]; */
+    /* f32 rValue = ecs->materialComponent->rValue[entityID];
+    f32 gValue = ecs->materialComponent->gValue[entityID];
+    f32 bValue = ecs->materialComponent->bValue[entityID];
+    f32 aValue = ecs->materialComponent->aValue[entityID]; */
     // Only applicable to entities who are of the shader type "SHADER_COLORED"
     setUniformVector4f(shaderProgramID, "uColor", 0.29, 0.0, 0.1, 1.0);
   }
@@ -48,25 +47,25 @@ void render_RenderComponent(ECS *ecs, uint8_t entityID) {
     glBindTexture(GL_TEXTURE_2D, textureID);
   }
 
-  unsigned int VAO = ecs->meshComponent->VAO[entityID];
-  unsigned int numVerts = ecs->meshComponent->vertexCount[entityID];
+  u32 VAO = ecs->meshComponent->VAO[entityID];
+  u32 numVerts = ecs->meshComponent->vertexCount[entityID];
   glBindVertexArray(VAO);
   glDrawArrays(GL_TRIANGLES, 0, numVerts);
   glBindVertexArray(0);
 }
 
-void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
+void render_InstantiatePlayerEntity(ECS *ecs, EntityID entityID,
                                     ComponentMask *entityComponentMasks) {
   // Currently assumign array size, should prob change in future
-  int vertArraySize = VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX;
-  float vertices[vertArraySize];
-  unsigned int VAO, VBO;
+  i32 vertArraySize = VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX;
+  f32 vertices[vertArraySize];
+  u32 VAO, VBO;
 
   // Initialize VAO/VBO
   setupRectangleGeometry(ecs->transformComponent, entityID, vertices, &VAO,
                          &VBO);
 
-  unsigned int shaderProgramID =
+  u32 shaderProgramID =
       compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
 
   textureID = loadTexture("textures/platform_texture.png");
@@ -82,46 +81,45 @@ void render_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
 }
 
 void setupRectangleGeometry(TransformComponent *transformComponent,
-                            uint8_t entityID, float *vertices,
-                            unsigned int *VAO, unsigned int *VBO) {
-  int vertArraySize;
+                            EntityID entityID, f32 *vertices, u32 *VAO,
+                            u32 *VBO) {
+  i32 vertArraySize;
   {
-    float xPos = transformComponent->x[entityID];
-    float yPos = transformComponent->y[entityID];
-    float width = transformComponent->xScale[entityID];
-    float height = transformComponent->yScale[entityID];
+    f32 xPos = transformComponent->x[entityID];
+    f32 yPos = transformComponent->y[entityID];
+    f32 width = transformComponent->xScale[entityID];
+    f32 height = transformComponent->yScale[entityID];
 
     vertArraySize =
         generateRectangleVertices(vertices, xPos, yPos, width, height);
   }
   {
-    float posCoordsPerVertex = 3;
-    float texCoordsPerVertex = 2;
-    int sizeOfVertex = COMPONENTS_PER_VERTEX * sizeof(float);
-    uint8_t texCoordOffset = 3;
+    f32 posCoordsPerVertex = 3;
+    f32 texCoordsPerVertex = 2;
+    i32 sizeOfVertex = COMPONENTS_PER_VERTEX * sizeof(f32);
+    u8 texCoordOffset = 3;
     // Set up VBO/VAO with data and data format respectively
     glGenVertexArrays(1, VAO);
     glGenBuffers(1, VBO);
     glBindBuffer(GL_ARRAY_BUFFER, *VBO);
     glBindVertexArray(*VAO);
-    glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(float), vertices,
+    glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(f32), vertices,
                  GL_STATIC_DRAW);
     glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
                           sizeOfVertex, (void *)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, texCoordsPerVertex, GL_FLOAT, GL_FALSE,
-                          sizeOfVertex,
-                          (void *)(texCoordOffset * sizeof(float)));
+                          sizeOfVertex, (void *)(texCoordOffset * sizeof(f32)));
     glEnableVertexAttribArray(1);
   }
 }
 
 // TODO: Update this to support rotation when needed
-int generateRectangleVertices(float *vertices, float x, float y, float width,
-                              float height) {
-  float halfWidth = width / 2;
-  float halfHeight = height / 2;
-  float rectangeVertices[] = {
+i32 generateRectangleVertices(f32 *vertices, f32 x, f32 y, f32 width,
+                              f32 height) {
+  f32 halfWidth = width / 2;
+  f32 halfHeight = height / 2;
+  f32 rectangeVertices[] = {
       x - halfWidth, y + halfHeight, 0.0f, 0.0f, 1.0f, // Top-left
       x - halfWidth, y - halfHeight, 0.0f, 0.0f, 0.0f, // Bottom-left
       x + halfWidth, y - halfHeight, 0.0f, 1.0f, 0.0f, // Bottom-right
@@ -130,7 +128,7 @@ int generateRectangleVertices(float *vertices, float x, float y, float width,
       x + halfWidth, y - halfHeight, 0.0f, 1.0f, 0.0f, // Bottom-right
       x + halfWidth, y + halfHeight, 0.0f, 1.0f, 1.0f, // Top-right
   };
-  int vertArraySize = VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX;
-  memcpy(vertices, rectangeVertices, vertArraySize * sizeof(float));
+  i32 vertArraySize = VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX;
+  memcpy(vertices, rectangeVertices, vertArraySize * sizeof(f32));
   return vertArraySize;
 }

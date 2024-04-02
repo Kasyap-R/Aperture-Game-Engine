@@ -6,15 +6,15 @@
 int main(void) {
   GLFWwindow *window;
 
-  int windowWidth = 1920;
-  int windowHeight = 1080;
+  i32 windowWidth = 1920;
+  i32 windowHeight = 1080;
 
   if (initializeWindow(&window, windowWidth, windowHeight) != 0) {
     return -1;
   }
 
-  int drawableWidth;
-  int drawableHeight;
+  i32 drawableWidth;
+  i32 drawableHeight;
 
   // Getting the size of the drawable area in the window
   glfwGetFramebufferSize(window, &drawableWidth, &drawableHeight);
@@ -26,15 +26,15 @@ int main(void) {
   initECS(ecs);
   ComponentMask entityComponentMasks[MAX_ENTITIES];
 
-  double prevTime = glfwGetTime() * 1000;
-  double lag = 0.0;
+  f64 prevTime = glfwGetTime() * 1000;
+  f64 lag = 0.0;
 
   start(ecs, entityComponentMasks);
 
   // main game loop
   while (!glfwWindowShouldClose(window)) {
-    double currentTime = glfwGetTime() * 1000;
-    double deltaTime = currentTime - prevTime;
+    f64 currentTime = glfwGetTime() * 1000;
+    f64 deltaTime = currentTime - prevTime;
     prevTime = currentTime;
     lag += deltaTime;
 
@@ -62,7 +62,7 @@ int main(void) {
 }
 
 // Return value is success code
-int start(ECS *ecs, ComponentMask *entityComponentMasks) {
+i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
   input_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
   physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
@@ -71,7 +71,7 @@ int start(ECS *ecs, ComponentMask *entityComponentMasks) {
 }
 
 void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
-  for (uint8_t entityID = 0; entityID < MAX_ENTITIES; entityID++) {
+  for (EntityID entityID = 0; entityID < MAX_ENTITIES; entityID++) {
     if (!ecs->entityActive[entityID]) {
       continue;
     }
@@ -84,14 +84,14 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
 
 void render(ECS *ecs) { render_RenderComponent(ecs, PLAYER_ENTITY_ID); }
 
-void framebufferSizeCallback(GLFWwindow *window, int drawableWidth,
-                             int drawableHeight) {
+void framebufferSizeCallback(GLFWwindow *window, i32 drawableWidth,
+                             i32 drawableHeight) {
   glViewport(0, 0, drawableWidth, drawableHeight);
 }
 
-// Double pointer is used so that initWindow can change which window the window
+// f64 pointer is used so that initWindow can change which window the window
 // pointer points to
-int initializeWindow(GLFWwindow **window, int windowWidth, int windowHeight) {
+i32 initializeWindow(GLFWwindow **window, i32 windowWidth, i32 windowHeight) {
   if (!glfwInit()) {
     printf("Failed to initialize GLFW");
     return -1;

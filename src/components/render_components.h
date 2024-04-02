@@ -33,12 +33,12 @@ void initMeshComponent(MeshComponent *meshComponent);
 void initMaterialComponent(MaterialComponent *materialComponent);
 void initColorComponent(ColorComponent *colorComponent);
 void initSpriteComponent(SpriteComponent *spriteComponent);
-void setEntityMesh(MeshComponent *meshComponent, u8 entityID, u32 VAO, u32 VBO,
-                   u32 vertexCount);
-void setEntityMaterial(MaterialComponent *materialComponent, u8 entityID,
-                       u32 shaderProgramID, float rValue, float gValue,
-                       float bValue, float aValue, ShaderType shaderType);
-void setEntityColor(ColorComponent *colorComponent, u8 entityID, f32 rValue,
-                    f32 gValue, f32 bValue, f32 aValue);
-void setEntitySprite(SpriteComponent *spriteComponent, u8 entityID,
+void setEntityMesh(MeshComponent *meshComponent, EntityID entityID, u32 VAO,
+                   u32 VBO, u32 vertexCount);
+void setEntityMaterial(MaterialComponent *materialComponent, EntityID entityID,
+                       u32 shaderProgramID, f32 rValue, f32 gValue, f32 bValue,
+                       f32 aValue, ShaderType shaderType);
+void setEntityColor(ColorComponent *colorComponent, EntityID entityID,
+                    f32 rValue, f32 gValue, f32 bValue, f32 aValue);
+void setEntitySprite(SpriteComponent *spriteComponent, EntityID entityID,
                      u32 textureID);

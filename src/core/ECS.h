@@ -6,7 +6,7 @@
 #include "../components/render_components.h"
 #include <stdint.h>
 
-typedef uint8_t ComponentMask;
+typedef u8 ComponentMask;
 
 typedef enum {
   COMPONENT_INPUT,
@@ -30,11 +30,11 @@ typedef struct {
   bool entityActive[MAX_ENTITIES];
 } ECS;
 
-bool hasComponent(uint8_t entityID, ComponentType type,
+bool hasComponent(EntityID entityID, ComponentType type,
                   ComponentMask *entityComponentMasks);
-void addComponentToEntity(ECS *ecs, uint8_t entityID, ComponentType type,
+void addComponentToEntity(ECS *ecs, EntityID entityID, ComponentType type,
                           ComponentMask *entityComponentMasks);
-void removeComponentFromEntity(ECS *ecs, uint8_t entityID, ComponentType type,
+void removeComponentFromEntity(ECS *ecs, EntityID entityID, ComponentType type,
                                ComponentMask *entityComponentMasks);
 
 void initECS(ECS *ecs);

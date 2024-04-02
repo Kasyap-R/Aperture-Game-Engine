@@ -8,7 +8,7 @@ void initInputComponent(InputComponent *inputComponent) {
          sizeof(inputComponent->isAKeyPressed));
 }
 
-void setEntityInput(InputComponent *inputComponent, uint8_t entityID,
+void setEntityInput(InputComponent *inputComponent, EntityID entityID,
                     bool isAPressed, bool isDPressed) {
   inputComponent->isAKeyPressed[entityID] = isAPressed;
   inputComponent->isDKeyPressed[entityID] = isDPressed;

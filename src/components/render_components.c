@@ -38,15 +38,15 @@ void setEntityMaterial(MaterialComponent *materialComponent, uint8_t entityID,
   materialComponent->shaderType[entityID] = shaderType;
 }
 
-void setEntityColor(ColorComponent *colorComponent, u8 entityID, f32 rValue,
-                    f32 gValue, f32 bValue, f32 aValue) {
+void setEntityColor(ColorComponent *colorComponent, EntityID entityID,
+                    f32 rValue, f32 gValue, f32 bValue, f32 aValue) {
   colorComponent->rValue[entityID] = rValue;
   colorComponent->gValue[entityID] = gValue;
   colorComponent->bValue[entityID] = bValue;
   colorComponent->aValue[entityID] = aValue;
 }
 
-void setEntitySprite(SpriteComponent *spriteComponent, u8 entityID,
+void setEntitySprite(SpriteComponent *spriteComponent, EntityID entityID,
                      u32 textureID) {
   spriteComponent->textureID[entityID] = textureID;
 }

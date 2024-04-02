@@ -6,6 +6,7 @@
 #define MS_PER_UPDATE 16
 #define MAX_ENTITIES 25
 
+typedef uint8_t EntityID;
 typedef uint8_t u8;
 typedef int32_t i32;
 typedef uint32_t u32;

@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-void physics_InstantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
+void physics_InstantiatePlayerEntity(ECS *ecs, EntityID playerEntityID,
                                      ComponentMask *entityComponentMasks) {
   addComponentToEntity(ecs, playerEntityID, COMPONENT_INPUT,
                        entityComponentMasks);
@@ -10,20 +10,20 @@ void physics_InstantiatePlayerEntity(ECS *ecs, uint8_t playerEntityID,
                        entityComponentMasks);
   addComponentToEntity(ecs, playerEntityID, COMPONENT_TRANFORM,
                        entityComponentMasks);
-  float xPos = 0.0f;
-  float yPos = -0.25f;
-  float width = 0.3f;
-  float height = 0.1f;
-  float rotation = 0.0f;
-  float xVelocity = 0.0f;
-  float yVelocity = 0.0f;
+  f32 xPos = 0.0f;
+  f32 yPos = -0.25f;
+  f32 width = 0.3f;
+  f32 height = 0.1f;
+  f32 rotation = 0.0f;
+  f32 xVelocity = 0.0f;
+  f32 yVelocity = 0.0f;
   setEntityTransform(ecs->transformComponent, playerEntityID, xPos, yPos, xPos,
                      yPos, width, height, rotation);
   setEntityVelocity(ecs->velocityComponent, playerEntityID, xVelocity,
                     yVelocity);
 }
 
-void physics_UpdatePlayerEntity(ECS *ecs, uint8_t entityID) {
+void physics_UpdatePlayerEntity(ECS *ecs, EntityID entityID) {
   {
     bool isAKeyPressed = ecs->inputComponent->isAKeyPressed[entityID];
     bool isDKeyPressed = ecs->inputComponent->isDKeyPressed[entityID];
@@ -40,9 +40,9 @@ void physics_UpdatePlayerEntity(ECS *ecs, uint8_t entityID) {
   }
 
   {
-    float xVelocity = ecs->velocityComponent->vX[entityID];
-    float currentXPos = ecs->transformComponent->x[entityID];
-    float currentYPos = ecs->transformComponent->y[entityID];
+    f32 xVelocity = ecs->velocityComponent->vX[entityID];
+    f32 currentXPos = ecs->transformComponent->x[entityID];
+    f32 currentYPos = ecs->transformComponent->y[entityID];
     ecs->transformComponent->xPrev[entityID] = currentXPos;
     ecs->transformComponent->yPrev[entityID] = currentYPos;
     currentXPos += xVelocity * 0.10f;

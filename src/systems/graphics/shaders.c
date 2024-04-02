@@ -3,15 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-void setUniformVector4f(unsigned int shaderProgramID, char *uniformName,
-                        float float1, float float2, float float3,
-                        float float4) {
+void setUniformVector4f(u32 shaderProgramID, char *uniformName, f32 float1,
+                        f32 float2, f32 float3, f32 float4) {
   int location = glGetUniformLocation(shaderProgramID, uniformName);
   glUniform4f(location, float1, float2, float3, float4);
 }
 
-unsigned int compileAndLinkShaders(char *vertexShaderPath,
-                                   char *fragmentShaderPath) {
+u32 compileAndLinkShaders(char *vertexShaderPath, char *fragmentShaderPath) {
   // Compiling Shader
   char *vertexShaderSource_heap = loadShaderSource(vertexShaderPath);
   char *fragmentShaderSource_heap = loadShaderSource(fragmentShaderPath);
@@ -92,7 +90,7 @@ char *loadShaderSource(char *filename) {
   }
 
   // Read bytes into memory
-  size_t bytesRead = fread(content_heap, sizeof(char), fileSize, file);
+  usize bytesRead = fread(content_heap, sizeof(char), fileSize, file);
   if (bytesRead < fileSize) {
     if (feof(file)) {
       printf("Unexpected end of file.\n");

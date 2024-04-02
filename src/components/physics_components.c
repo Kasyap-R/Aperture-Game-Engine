@@ -15,16 +15,16 @@ void initTransformComponent(TransformComponent *tComponent) {
   memset(tComponent->rotation, 0, sizeof(tComponent->rotation));
 }
 
-void setEntityVelocity(VelocityComponent *velocityComponent, uint8_t entityID,
-                       float xVelocity, float yVelocity) {
+void setEntityVelocity(VelocityComponent *velocityComponent, EntityID entityID,
+                       f32 xVelocity, f32 yVelocity) {
   velocityComponent->vX[entityID] = xVelocity;
   velocityComponent->vY[entityID] = yVelocity;
 }
 
 void setEntityTransform(TransformComponent *transformComponent,
-                        uint8_t entityID, float xPrevPosition,
-                        float yPrevPosition, float xPosition, float yPosition,
-                        float xScale, float yScale, float rotation) {
+                        EntityID entityID, f32 xPrevPosition, f32 yPrevPosition,
+                        f32 xPosition, f32 yPosition, f32 xScale, f32 yScale,
+                        f32 rotation) {
   transformComponent->xPrev[entityID] = xPrevPosition;
   transformComponent->yPrev[entityID] = yPrevPosition;
   transformComponent->x[entityID] = xPosition;

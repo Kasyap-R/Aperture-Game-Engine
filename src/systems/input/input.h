@@ -7,6 +7,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void input_InstantiatePlayerEntity(ECS *ecs, uint8_t entityID,
+void input_InstantiatePlayerEntity(ECS *ecs, EntityID entityID,
                                    ComponentMask *entityComponentMasks);
-void input_ProcessInput(ECS *ecs, GLFWwindow *window, uint8_t entityID);
+void input_ProcessInput(ECS *ecs, GLFWwindow *window, EntityID entityID);
