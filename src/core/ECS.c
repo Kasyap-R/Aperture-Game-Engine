@@ -34,4 +34,6 @@ void initECS(ECS *ecs) {
   initInputComponent(ecs->inputComponent);
   initMeshComponent(ecs->meshComponent);
   initMaterialComponent(ecs->materialComponent);
+  initColorComponent(ecs->colorComponent);
+  initSpriteComponent(ecs->spriteComponent);
 }

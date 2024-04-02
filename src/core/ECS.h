@@ -14,6 +14,8 @@ typedef enum {
   COMPONENT_VELOCITY,
   COMPONENT_MESH,
   COMPONENT_MATERIAL,
+  COMPONENT_COLOR,
+  COMPONENT_SPRITE,
   COMPONENT_COUNT,
 } ComponentType;
 
@@ -23,6 +25,8 @@ typedef struct {
   VelocityComponent velocityComponent[MAX_ENTITIES];
   MeshComponent meshComponent[MAX_ENTITIES];
   MaterialComponent materialComponent[MAX_ENTITIES];
+  ColorComponent colorComponent[MAX_ENTITIES];
+  SpriteComponent spriteComponent[MAX_ENTITIES];
   bool entityActive[MAX_ENTITIES];
 } ECS;
 

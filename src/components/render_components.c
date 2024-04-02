@@ -14,6 +14,17 @@ void initMaterialComponent(MaterialComponent *matComponent) {
   memset(matComponent->aValue, 0, sizeof(matComponent->aValue));
 }
 
+void initColorComponent(ColorComponent *colorComponent) {
+  memset(colorComponent->rValue, 0, sizeof(colorComponent->rValue));
+  memset(colorComponent->gValue, 0, sizeof(colorComponent->gValue));
+  memset(colorComponent->bValue, 0, sizeof(colorComponent->bValue));
+  memset(colorComponent->aValue, 0, sizeof(colorComponent->aValue));
+}
+
+void initSpriteComponent(SpriteComponent *spriteComponent) {
+  memset(spriteComponent->textureID, 0, sizeof(spriteComponent->textureID));
+}
+
 void setEntityMesh(MeshComponent *mComponent, uint8_t entityID,
                    unsigned int VAO, unsigned int VBO,
                    unsigned int vertexCount) {
@@ -30,4 +41,17 @@ void setEntityMaterial(MaterialComponent *matComponent, uint8_t entityID,
   matComponent->gValue[entityID] = gValue;
   matComponent->bValue[entityID] = bValue;
   matComponent->aValue[entityID] = aValue;
+}
+
+void setEntityColor(ColorComponent *colorComponent, u8 entityID, f32 rValue,
+                    f32 gValue, f32 bValue, f32 aValue) {
+  colorComponent->rValue[entityID] = rValue;
+  colorComponent->gValue[entityID] = gValue;
+  colorComponent->bValue[entityID] = bValue;
+  colorComponent->aValue[entityID] = aValue;
+}
+
+void setEntitySprite(SpriteComponent *spriteComponent, u8 entityID,
+                     u32 textureID) {
+  spriteComponent->textureID[entityID] = textureID;
 }
