@@ -9,6 +9,8 @@ typedef struct {
   u32 values[100];
 } HashMap;
 
-HashMap *ds_createHashMap();
+HashMap *createHashMap();
 u32 getHash(u32 key);
-void ds_insertHashMap(HashMap *hashMap, u32 key, u32 value);
+void initHashMap(HashMap *hashMap);
+u32 ds_getHashMapValue(HashMap **hashMap, u32 key);
+void ds_insertHashMap(HashMap **hashMap, u32 key, u32 value);

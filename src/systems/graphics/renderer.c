@@ -9,44 +9,62 @@
 #include <cglm/types.h>
 #include <string.h>
 
-#define COMPONENTS_PER_VERTEX 5
+#define COMPONENTS_PER_TEXTURED_VERTEX 5
+#define COMPONENTS_PER_COLORED_VERTEX 3
 #define VERTICES_PER_RECTANGE 6
 
-static i32 textureID;
+static HashMap *shaderTypeToID = NULL;
 
-void render_RenderComponent(ECS *ecs, EntityID entityID) {
+void render_LoadShaders() {
+  u8 colorShaderID =
+      compileAndLinkShaders("shaders/color.vert", "shaders/color.frag");
+  u8 textureShaderID =
+      compileAndLinkShaders("shaders/texture.vert", "shaders/texture.frag");
+  ds_insertHashMap(&shaderTypeToID, SHADER_COLORED, colorShaderID);
+  ds_insertHashMap(&shaderTypeToID, SHADER_TEXTURED, textureShaderID);
+}
+
+void render_RenderEntity(ECS *ecs, EntityID entityID) {
   u32 shaderProgramID = ecs->materialComponent->shaderProgramID[entityID];
   glUseProgram(shaderProgramID);
-  // Calculate translation matrix (part of model matrix)
+  // Calculating Translation Matrix
   {
-    f32 xTargetPos = ecs->transformComponent->x[entityID];
-    f32 yTargetPos = ecs->transformComponent->y[entityID];
-    vec3 translation = {xTargetPos, yTargetPos, 0.0f};
+    f32 xPos = ecs->transformComponent->x[entityID];
+    f32 yPos = ecs->transformComponent->y[entityID];
+    vec3 translationVector = {xPos, yPos, 0.0f};
     mat4 translationMatrix;
-    glm_mat4_identity(translationMatrix); // start with identity matrix
-    glm_translate(translationMatrix, translation);
+    glm_mat4_identity(translationMatrix);
+    glm_translate(translationMatrix, translationVector);
     GLint transMatLocation = glGetUniformLocation(shaderProgramID, "uTransMat");
-    // This sets the initial position to the 2 * starting position as I
-    // translate it by this amount I could solve this by setting the initial
-    // value and subtracting from that or I could just set up a better system
-    // where I actually define a coordinate system and accurately convert that
-    // to NDC
     glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
                        (const GLfloat *)translationMatrix);
   }
+  // Setting up fragment shader
   {
-    /* f32 rValue = ecs->materialComponent->rValue[entityID];
-    f32 gValue = ecs->materialComponent->gValue[entityID];
-    f32 bValue = ecs->materialComponent->bValue[entityID];
-    f32 aValue = ecs->materialComponent->aValue[entityID]; */
-    // Only applicable to entities who are of the shader type "SHADER_COLORED"
-    setUniformVector4f(shaderProgramID, "uColor", 0.29, 0.0, 0.1, 1.0);
+    u32 textureID;
+    ShaderType shaderType = ecs->materialComponent->shaderType[entityID];
+    f32 rValue, gValue, bValue, aValue;
+    switch (shaderType) {
+    case SHADER_COLORED:
+      rValue = ecs->colorComponent->rValue[entityID];
+      gValue = ecs->colorComponent->gValue[entityID];
+      bValue = ecs->colorComponent->bValue[entityID];
+      aValue = ecs->colorComponent->aValue[entityID];
+      setUniformVector4f(shaderProgramID, "uColor", rValue, gValue, bValue,
+                         aValue);
+      break;
+    case SHADER_TEXTURED:
+      textureID = ecs->spriteComponent->textureID[entityID];
+      u32 texUniLoc = glGetUniformLocation(shaderProgramID, "uTexture");
+      glUniform1i(texUniLoc, 0);
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, textureID);
+      break;
+    default:
+      printf("Invalid Shader Type\n");
+      break;
+    }
   }
-  {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureID);
-  }
-
   u32 VAO = ecs->meshComponent->VAO[entityID];
   u32 numVerts = ecs->meshComponent->vertexCount[entityID];
   glBindVertexArray(VAO);
@@ -54,71 +72,116 @@ void render_RenderComponent(ECS *ecs, EntityID entityID) {
   glBindVertexArray(0);
 }
 
-void render_InstantiatePlayerEntity(ECS *ecs, EntityID entityID,
-                                    ComponentMask *entityComponentMasks) {
-  // Currently assumign array size, should prob change in future
-  i32 vertArraySize = VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX;
-  f32 vertices[vertArraySize];
+void render_InstantiateRectangleEntity(ECS *ecs, EntityID entityID,
+                                       ShaderType shaderType,
+                                       ComponentMask *entityComponentMasks) {
+  f32 *vertices_heap;
+  u32 numVerts;
   u32 VAO, VBO;
+  f32 width = ecs->transformComponent->xScale[entityID];
+  f32 height = ecs->transformComponent->yScale[entityID];
+  int vertArrayLength;
+  u32 shaderProgramID;
 
-  // Initialize VAO/VBO
-  setupRectangleGeometry(ecs->transformComponent, entityID, vertices, &VAO,
-                         &VBO);
+  switch (shaderType) {
+  case SHADER_COLORED:
+    vertArrayLength =
+        generateColoredRectangleVertices(&vertices_heap, width, height);
+    shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_COLORED);
+    break;
+  case SHADER_TEXTURED:
+    vertArrayLength =
+        generateTexturedRectangleVertices(&vertices_heap, width, height);
+    shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_TEXTURED);
+    break;
+  default:
+    printf("Invalid Shader Type\n");
+    exit(EXIT_FAILURE);
+  }
 
-  u32 shaderProgramID =
-      compileAndLinkShaders("shaders/player.vert", "shaders/player.frag");
+  generateVertexBuffers(shaderType, vertices_heap, vertArrayLength, &VAO, &VBO,
+                        &numVerts);
 
-  textureID = loadTexture("textures/platform_texture.png");
-
-  setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID, 0.29,
-                    0.0, 0.51, 1.0, SHADER_TEXTURED);
+  setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID,
+                    shaderType);
   setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, VERTICES_PER_RECTANGE);
-  setEntitySprite(ecs->spriteComponent, entityID, textureID);
 
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
+
+  free(vertices_heap);
+}
+
+void render_AddSpriteComponent(ECS *ecs, EntityID entityID,
+                               ComponentMask *entityComponentMasks,
+                               char *texturePath) {
+  u32 textureID = loadTexture(texturePath);
+  setEntitySprite(ecs->spriteComponent, entityID, textureID);
   addComponentToEntity(ecs, entityID, COMPONENT_SPRITE, entityComponentMasks);
 }
 
-void setupRectangleGeometry(TransformComponent *transformComponent,
-                            EntityID entityID, f32 *vertices, u32 *VAO,
-                            u32 *VBO) {
-  i32 vertArraySize;
-  {
-    f32 xPos = transformComponent->x[entityID];
-    f32 yPos = transformComponent->y[entityID];
-    f32 width = transformComponent->xScale[entityID];
-    f32 height = transformComponent->yScale[entityID];
+void render_AddColorComponent(ECS *ecs, EntityID entityID,
+                              ComponentMask *entityComponentMasks, f32 rValue,
+                              f32 gValue, f32 bValue, f32 aValue) {
+  setEntityColor(ecs->colorComponent, entityID, rValue, gValue, bValue, aValue);
+  addComponentToEntity(ecs, entityID, COMPONENT_COLOR, entityComponentMasks);
+}
 
-    vertArraySize =
-        generateRectangleVertices(vertices, xPos, yPos, width, height);
-  }
+void generateVertexBuffers(ShaderType shaderType, f32 *vertices,
+                           u32 vertArrayLength, u32 *VAO, u32 *VBO,
+                           u32 *numVerts) {
+  *numVerts = VERTICES_PER_RECTANGE;
+
+  glGenVertexArrays(1, VAO);
+  glGenBuffers(1, VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, *VBO);
+  glBindVertexArray(*VAO);
+  glBufferData(GL_ARRAY_BUFFER, vertArrayLength * sizeof(f32), vertices,
+               GL_STATIC_DRAW);
+
   {
-    f32 posCoordsPerVertex = 3;
-    f32 texCoordsPerVertex = 2;
-    i32 sizeOfVertex = COMPONENTS_PER_VERTEX * sizeof(f32);
-    u8 texCoordOffset = 3;
-    // Set up VBO/VAO with data and data format respectively
-    glGenVertexArrays(1, VAO);
-    glGenBuffers(1, VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, *VBO);
-    glBindVertexArray(*VAO);
-    glBufferData(GL_ARRAY_BUFFER, vertArraySize * sizeof(f32), vertices,
-                 GL_STATIC_DRAW);
-    glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
-                          sizeOfVertex, (void *)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, texCoordsPerVertex, GL_FLOAT, GL_FALSE,
-                          sizeOfVertex, (void *)(texCoordOffset * sizeof(f32)));
-    glEnableVertexAttribArray(1);
+    u32 posCoordsPerVertex = 3;
+    u32 sizeOfVertex = sizeof(f32);
+    u32 texCoordsPerVertex;
+    u32 texCoordOffset;
+
+    switch (shaderType) {
+    case SHADER_COLORED:
+      *numVerts *= COMPONENTS_PER_COLORED_VERTEX;
+      sizeOfVertex *= COMPONENTS_PER_COLORED_VERTEX;
+      glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
+                            sizeOfVertex, (void *)0);
+      glEnableVertexAttribArray(0);
+      break;
+    case SHADER_TEXTURED:
+      *numVerts *= COMPONENTS_PER_TEXTURED_VERTEX;
+      sizeOfVertex *= COMPONENTS_PER_TEXTURED_VERTEX;
+      texCoordsPerVertex = 2;
+      texCoordOffset = 3;
+      glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
+                            sizeOfVertex, (void *)0);
+      glEnableVertexAttribArray(0);
+      glVertexAttribPointer(1, texCoordsPerVertex, GL_FLOAT, GL_FALSE,
+                            sizeOfVertex,
+                            (void *)(texCoordOffset * sizeof(f32)));
+      glEnableVertexAttribArray(1);
+      break;
+    default:
+      printf("Invalid Shader Type\n");
+      exit(EXIT_FAILURE);
+    }
   }
 }
 
 // TODO: Update this to support rotation when needed
-i32 generateRectangleVertices(f32 *vertices, f32 x, f32 y, f32 width,
-                              f32 height) {
+i32 generateTexturedRectangleVertices(f32 **vertices, f32 width, f32 height) {
+  f32 x = 0.0;
+  f32 y = 0.0;
   f32 halfWidth = width / 2;
   f32 halfHeight = height / 2;
+  i32 vertArrayLength = VERTICES_PER_RECTANGE * COMPONENTS_PER_TEXTURED_VERTEX;
+  int vertArraySize = vertArrayLength * sizeof(f32);
+  *vertices = malloc(vertArraySize);
   f32 rectangeVertices[] = {
       x - halfWidth, y + halfHeight, 0.0f, 0.0f, 1.0f, // Top-left
       x - halfWidth, y - halfHeight, 0.0f, 0.0f, 0.0f, // Bottom-left
@@ -128,7 +191,28 @@ i32 generateRectangleVertices(f32 *vertices, f32 x, f32 y, f32 width,
       x + halfWidth, y - halfHeight, 0.0f, 1.0f, 0.0f, // Bottom-right
       x + halfWidth, y + halfHeight, 0.0f, 1.0f, 1.0f, // Top-right
   };
-  i32 vertArraySize = VERTICES_PER_RECTANGE * COMPONENTS_PER_VERTEX;
-  memcpy(vertices, rectangeVertices, vertArraySize * sizeof(f32));
-  return vertArraySize;
+  memcpy(*vertices, rectangeVertices, vertArraySize);
+  return vertArrayLength;
+}
+
+// TODO: Update this to support rotation when needed
+i32 generateColoredRectangleVertices(f32 **vertices, f32 width, f32 height) {
+  f32 x = 0.0;
+  f32 y = 0.0;
+  f32 halfWidth = width / 2;
+  f32 halfHeight = height / 2;
+  i32 vertArrayLength = VERTICES_PER_RECTANGE * COMPONENTS_PER_COLORED_VERTEX;
+  int vertArraySize = vertArrayLength * sizeof(f32);
+  *vertices = malloc(vertArraySize);
+  f32 rectangeVertices[] = {
+      x - halfWidth, y + halfHeight, 0.0f, // Top-left
+      x - halfWidth, y - halfHeight, 0.0f, // Bottom-left
+      x + halfWidth, y - halfHeight, 0.0f, // Bottom-right
+
+      x - halfWidth, y + halfHeight, 0.0f, // Top-left
+      x + halfWidth, y - halfHeight, 0.0f, // Bottom-right
+      x + halfWidth, y + halfHeight, 0.0f, // Top-right
+  };
+  memcpy(*vertices, rectangeVertices, vertArraySize);
+  return vertArrayLength;
 }
