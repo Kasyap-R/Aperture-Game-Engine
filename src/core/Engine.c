@@ -66,7 +66,11 @@ i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
   input_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
   physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
-  render_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
+  render_LoadShaders();
+  render_InstantiateRectangleEntity(ecs, PLAYER_ENTITY_ID, SHADER_TEXTURED,
+                                    entityComponentMasks);
+  render_AddSpriteComponent(ecs, PLAYER_ENTITY_ID, entityComponentMasks,
+                            "textures/platform_texture.png");
   return 0;
 }
 
