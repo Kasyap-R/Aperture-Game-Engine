@@ -24,3 +24,6 @@ void framebufferSizeCallback(GLFWwindow *window, i32 drawableWidth,
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks);
 void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks);
 void render(ECS *ecs);
+i32 initializeAperture(GLFWwindow **window, ECS **ecs,
+                       ComponentMask **entityComponentMasks, i32 windowWidth,
+                       i32 windowHeight);

@@ -5,29 +5,19 @@
 
 int main(void) {
   GLFWwindow *window;
+  ECS *ecs;
+  ComponentMask *entityComponentMasks;
 
   i32 windowWidth = 1920;
   i32 windowHeight = 1080;
 
-  if (initializeWindow(&window, windowWidth, windowHeight) != 0) {
-    return -1;
-  }
-
-  i32 drawableWidth;
-  i32 drawableHeight;
-
-  // Getting the size of the drawable area in the window
-  glfwGetFramebufferSize(window, &drawableWidth, &drawableHeight);
-
-  // Setting the viewport to cover the whole window
-  glViewport(0, 0, drawableWidth, drawableHeight);
-
-  ECS *ecs = malloc(sizeof(ECS));
-  initECS(ecs);
-  ComponentMask entityComponentMasks[MAX_ENTITIES];
+  initializeAperture(&window, &ecs, &entityComponentMasks, windowWidth,
+                     windowHeight);
 
   f64 prevTime = glfwGetTime() * 1000;
   f64 lag = 0.0;
+  f64 timeSinceLastSecond = 0.0;
+  i32 FPS = 0;
 
   start(ecs, entityComponentMasks);
 
@@ -35,8 +25,17 @@ int main(void) {
   while (!glfwWindowShouldClose(window)) {
     f64 currentTime = glfwGetTime() * 1000;
     f64 deltaTime = currentTime - prevTime;
+    timeSinceLastSecond += deltaTime;
     prevTime = currentTime;
     lag += deltaTime;
+    FPS += 1;
+
+    if ((timeSinceLastSecond) >= 1000) {
+      printf("FPS: %d\n", FPS);
+      timeSinceLastSecond = 0;
+      FPS = 0;
+      fflush(stdout);
+    }
 
     // Ensure game time catches up with real time
     while (lag >= MS_PER_UPDATE) {
@@ -66,7 +65,6 @@ i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
   input_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
   physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
-  render_LoadShaders();
   render_InstantiateRectangleEntity(ecs, PLAYER_ENTITY_ID, SHADER_TEXTURED,
                                     entityComponentMasks);
   render_AddSpriteComponent(ecs, PLAYER_ENTITY_ID, entityComponentMasks,
@@ -86,7 +84,29 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
   }
 }
 
-void render(ECS *ecs) { render_RenderComponent(ecs, PLAYER_ENTITY_ID); }
+void render(ECS *ecs) { render_RenderEntity(ecs, PLAYER_ENTITY_ID); }
+
+i32 initializeAperture(GLFWwindow **window, ECS **ecs,
+                       ComponentMask **entityComponentMasks, i32 windowWidth,
+                       i32 windowHeight) {
+  if (initializeWindow(window, windowWidth, windowHeight) != 0) {
+    return -1;
+  }
+
+  i32 drawableWidth;
+  i32 drawableHeight;
+
+  glfwGetFramebufferSize(*window, &drawableWidth, &drawableHeight);
+  glViewport(0, 0, drawableWidth, drawableHeight);
+
+  *ecs = malloc(sizeof(ECS));
+  *entityComponentMasks = malloc(sizeof(ComponentMask) * MAX_ENTITIES);
+
+  initECS(*ecs);
+
+  render_LoadShaders();
+  return 0;
+}
 
 void framebufferSizeCallback(GLFWwindow *window, i32 drawableWidth,
                              i32 drawableHeight) {

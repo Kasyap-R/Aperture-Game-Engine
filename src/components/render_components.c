@@ -32,8 +32,7 @@ void setEntityMesh(MeshComponent *meshComponent, uint8_t entityID,
 }
 
 void setEntityMaterial(MaterialComponent *materialComponent, uint8_t entityID,
-                       unsigned int shaderProgramID, float rValue, float gValue,
-                       float bValue, float aValue, ShaderType shaderType) {
+                       unsigned int shaderProgramID, ShaderType shaderType) {
   materialComponent->shaderProgramID[entityID] = shaderProgramID;
   materialComponent->shaderType[entityID] = shaderType;
 }
