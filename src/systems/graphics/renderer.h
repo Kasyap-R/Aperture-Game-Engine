@@ -17,6 +17,9 @@ void render_RenderEntity(ECS *ecs, EntityID entityID);
 void render_InstantiateRectangleEntity(ECS *ecs, EntityID entityID,
                                        ShaderType shaderType,
                                        ComponentMask *entityComponentMasks);
+void render_InstantiateCircleEntity(ECS *ecs, EntityID entityID,
+                                    ShaderType shaderType,
+                                    ComponentMask *entityComponentMasks);
 void render_AddSpriteComponent(ECS *ecs, EntityID entityID,
                                ComponentMask *entityComponentMasks,
                                char *texturePath);
@@ -25,8 +28,9 @@ void render_AddColorComponent(ECS *ecs, EntityID entityID,
                               f32 gValue, f32 bValue, f32 aValue);
 
 // Functions for use internally within the render system
-int generateTexturedRectangleVertices(f32 **vertices, f32 width, f32 height);
+i32 generateTexturedRectangleVertices(f32 **vertices, f32 width, f32 height);
 i32 generateColoredRectangleVertices(f32 **vertices, f32 width, f32 height);
+i32 generateTexturedCircleVertices(f32 **vertices, f32 width, f32 height);
 
 u32 compileAndLinkShaders(char *vertexShaderPath, char *fragmentShaderPath);
 

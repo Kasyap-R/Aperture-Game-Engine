@@ -17,7 +17,7 @@ void input_ProcessInput(ECS *ecs, GLFWwindow *window, EntityID entityID) {
   }
 }
 
-void input_InstantiatePlayerEntity(ECS *ecs, EntityID entityID,
-                                   ComponentMask *entityComponentMasks) {
+void input_InstantiateEntity(ECS *ecs, EntityID entityID,
+                             ComponentMask *entityComponentMasks) {
   addComponentToEntity(ecs, entityID, COMPONENT_INPUT, entityComponentMasks);
 }

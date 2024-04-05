@@ -6,7 +6,7 @@
 #include "../components/render_components.h"
 #include <stdint.h>
 
-typedef u8 ComponentMask;
+typedef u32 ComponentMask;
 
 typedef enum {
   COMPONENT_INPUT,
@@ -38,3 +38,5 @@ void removeComponentFromEntity(ECS *ecs, EntityID entityID, ComponentType type,
                                ComponentMask *entityComponentMasks);
 
 void initECS(ECS *ecs);
+void initEntityComponentMasks(ComponentMask *entityComponentMasks,
+                              usize maskSize);

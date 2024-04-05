@@ -37,3 +37,8 @@ void initECS(ECS *ecs) {
   initColorComponent(ecs->colorComponent);
   initSpriteComponent(ecs->spriteComponent);
 }
+
+void initEntityComponentMasks(ComponentMask *entityComponentMasks,
+                              usize maskSize) {
+  memset(entityComponentMasks, 0, maskSize);
+}

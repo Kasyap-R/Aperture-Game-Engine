@@ -2,6 +2,7 @@
 #include "ECS.h"
 
 #define PLAYER_ENTITY_ID 0
+#define BALL_ENTITY_ID 1
 
 int main(void) {
   GLFWwindow *window;
@@ -37,6 +38,8 @@ int main(void) {
       fflush(stdout);
     }
 
+    update(ecs, window, entityComponentMasks);
+
     // Ensure game time catches up with real time
     while (lag >= MS_PER_UPDATE) {
       glfwPollEvents();
@@ -63,11 +66,24 @@ int main(void) {
 // Return value is success code
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
-  input_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
-  physics_InstantiatePlayerEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
+  PhysicsAttributes pAttributesPlayer = {0.0, -0.25, 0.3, 0.1, 0.0, 0.0, 0.0};
+  PhysicsAttributes pAttributesCircle = {0.0, 0.25, 0.3, 0.3, 0.0, 0.01, -0.01};
+
+  // Player Setup
+  input_InstantiateEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
+  physics_InstantiateEntity(ecs, PLAYER_ENTITY_ID, pAttributesPlayer,
+                            entityComponentMasks);
   render_InstantiateRectangleEntity(ecs, PLAYER_ENTITY_ID, SHADER_TEXTURED,
                                     entityComponentMasks);
   render_AddSpriteComponent(ecs, PLAYER_ENTITY_ID, entityComponentMasks,
+                            "textures/platform_texture.png");
+
+  // Ball Setup
+  physics_InstantiateEntity(ecs, BALL_ENTITY_ID, pAttributesCircle,
+                            entityComponentMasks);
+  render_InstantiateCircleEntity(ecs, BALL_ENTITY_ID, SHADER_TEXTURED,
+                                 entityComponentMasks);
+  render_AddSpriteComponent(ecs, BALL_ENTITY_ID, entityComponentMasks,
                             "textures/platform_texture.png");
   return 0;
 }
@@ -78,13 +94,17 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
       continue;
     }
     if (hasComponent(entityID, COMPONENT_INPUT, entityComponentMasks)) {
-      input_ProcessInput(ecs, window, PLAYER_ENTITY_ID);
-      physics_UpdatePlayerEntity(ecs, PLAYER_ENTITY_ID);
+      input_ProcessInput(ecs, window, entityID);
+      physics_ProcessInput(ecs, entityID);
     }
+    physics_UpdateEntityPosition(ecs, entityID);
   }
 }
 
-void render(ECS *ecs) { render_RenderEntity(ecs, PLAYER_ENTITY_ID); }
+void render(ECS *ecs) {
+  render_RenderEntity(ecs, PLAYER_ENTITY_ID);
+  render_RenderEntity(ecs, BALL_ENTITY_ID);
+}
 
 i32 initializeAperture(GLFWwindow **window, ECS **ecs,
                        ComponentMask **entityComponentMasks, i32 windowWidth,
@@ -100,9 +120,11 @@ i32 initializeAperture(GLFWwindow **window, ECS **ecs,
   glViewport(0, 0, drawableWidth, drawableHeight);
 
   *ecs = malloc(sizeof(ECS));
-  *entityComponentMasks = malloc(sizeof(ComponentMask) * MAX_ENTITIES);
+  i32 maskSize = sizeof(ComponentMask) * MAX_ENTITIES;
+  *entityComponentMasks = malloc(maskSize);
 
   initECS(*ecs);
+  initEntityComponentMasks(*entityComponentMasks, maskSize);
 
   render_LoadShaders();
   return 0;

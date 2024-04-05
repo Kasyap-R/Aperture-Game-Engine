@@ -17,7 +17,6 @@ u32 loadTexture(char *textureName) {
   unsigned char *data_heap =
       stbi_load(textureName, &width, &height, &nrChannels, 0);
 
-  printf("Width: %d\nHeight: %d\n", width, height);
   if (data_heap) {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
                  GL_UNSIGNED_BYTE, data_heap);
