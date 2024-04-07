@@ -9,8 +9,6 @@
 #include <cglm/types.h>
 #include <string.h>
 
-#define PI 3.14159265358979323846
-
 #define COMPONENTS_PER_TEXTURED_VERTEX 5
 #define COMPONENTS_PER_COLORED_VERTEX 3
 #define VERTICES_PER_RECTANGE 6
@@ -70,7 +68,7 @@ void render_RenderEntity(ECS *ecs, EntityID entityID) {
   u32 VAO = ecs->meshComponent->VAO[entityID];
   u32 numVerts = ecs->meshComponent->vertexCount[entityID];
   glBindVertexArray(VAO);
-  glDrawArrays(GL_TRIANGLES, 0, numVerts);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, numVerts);
   glBindVertexArray(0);
 }
 
@@ -106,7 +104,7 @@ void render_InstantiateRectangleEntity(ECS *ecs, EntityID entityID,
 
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID,
                     shaderType);
-  setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, VERTICES_PER_RECTANGE);
+  setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, numVerts);
 
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
@@ -123,18 +121,17 @@ void render_InstantiateCircleEntity(ECS *ecs, EntityID entityID,
   f32 width = ecs->transformComponent->xScale[entityID];
   f32 height = ecs->transformComponent->yScale[entityID];
   int vertArrayLength;
-  u32 shaderProgramID;
+  f32 radius = width / 2;
+
+  u32 shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_COLORED);
 
   switch (shaderType) {
   case SHADER_COLORED:
-    vertArrayLength =
-        generateColoredRectangleVertices(&vertices_heap, width, height);
-    shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_COLORED);
+    vertArrayLength = generateColoredCircleVertices(&vertices_heap, height / 2);
     break;
   case SHADER_TEXTURED:
     vertArrayLength =
-        generateTexturedCircleVertices(&vertices_heap, width, height);
-    shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_TEXTURED);
+        generateTexturedCircleVertices(&vertices_heap, height / 2);
     break;
   default:
     printf("Invalid Shader Type\n");
@@ -146,8 +143,7 @@ void render_InstantiateCircleEntity(ECS *ecs, EntityID entityID,
 
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID,
                     shaderType);
-  setEntityMesh(ecs->meshComponent, entityID, VAO, VBO,
-                vertArrayLength / COMPONENTS_PER_TEXTURED_VERTEX);
+  setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, numVerts);
 
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
@@ -189,7 +185,6 @@ void generateVertexBuffers(ShaderType shaderType, f32 *vertices,
     switch (shaderType) {
     case SHADER_COLORED:
       *numVerts = vertArrayLength / COMPONENTS_PER_COLORED_VERTEX;
-      *numVerts *= COMPONENTS_PER_COLORED_VERTEX;
       sizeOfVertex *= COMPONENTS_PER_COLORED_VERTEX;
       glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
                             sizeOfVertex, (void *)0);
@@ -237,37 +232,60 @@ i32 generateTexturedRectangleVertices(f32 **vertices, f32 width, f32 height) {
   return vertArrayLength;
 }
 
-i32 generateTexturedCircleVertices(f32 **vertices, f32 width, f32 height) {
-  i32 segments = 30;
-  f32 radius = width / 2;
-  i32 verticesPerSegment = 3;
-  i32 vertArrayLength =
-      segments * verticesPerSegment * COMPONENTS_PER_TEXTURED_VERTEX;
+i32 generateColoredCircleVertices(f32 **vertices, f32 radius) {
+  i32 numTrianges = 30;
+  // 3 Vertices for the first triangle and one additional one for each one after
+  i32 numVertices = numTrianges + 2;
+  f32 doublePI = 2.0f * M_PI;
+  i32 vertArrayLength = numVertices * COMPONENTS_PER_COLORED_VERTEX;
 
-  *vertices = (float *)malloc(vertArrayLength * sizeof(float));
-  for (int i = 0; i < segments; ++i) {
-    f32 angle1 = 2 * PI * (float)i / segments;
-    f32 angle2 = 2 * PI * (float)(i + 1) / segments;
+  *vertices = (f32 *)malloc(vertArrayLength * sizeof(f32));
+  // Definining central vertex
+  (*vertices)[0] = 0.0f; // x
+  (*vertices)[1] = 0.0f; // y
+  (*vertices)[2] = 0.0f; // z
 
-    int baseIndex = i * verticesPerSegment * COMPONENTS_PER_TEXTURED_VERTEX;
-    (*vertices)[baseIndex + 0] = 0.0f; // x
-    (*vertices)[baseIndex + 1] = 0.0f; // y
-    (*vertices)[baseIndex + 2] = 0.0f; // z
-    (*vertices)[baseIndex + 3] = 0.5f; // u (texture x)
-    (*vertices)[baseIndex + 4] = 0.5f; // v (texture y)
-    // First vertex on circumference
-    (*vertices)[baseIndex + 5] = radius * cos(angle1);        // x
-    (*vertices)[baseIndex + 6] = radius * sin(angle1);        // y
-    (*vertices)[baseIndex + 7] = 0.0f;                        // z
-    (*vertices)[baseIndex + 8] = (cos(angle1) + 1.0f) / 2.0f; // u
-    (*vertices)[baseIndex + 9] = (sin(angle1) + 1.0f) / 2.0f; // v
+  for (i32 i = 1; i <= numTrianges; i++) {
+    i32 currVertexIndex = COMPONENTS_PER_COLORED_VERTEX * i;
+    (*vertices)[currVertexIndex] =
+        radius * cos(i * doublePI / (float)numTrianges);
+    (*vertices)[currVertexIndex + 1] =
+        radius * sin(i * doublePI / (float)numTrianges);
+    (*vertices)[currVertexIndex + 2] = 0.0f;
+  }
 
-    // Second vertex on circumference
-    (*vertices)[baseIndex + 10] = radius * cos(angle2);        // x
-    (*vertices)[baseIndex + 11] = radius * sin(angle2);        // y
-    (*vertices)[baseIndex + 12] = 0.0f;                        // z
-    (*vertices)[baseIndex + 13] = (cos(angle2) + 1.0f) / 2.0f; // u
-    (*vertices)[baseIndex + 14] = (sin(angle2) + 1.0f) / 2.0f; // v
+  // Defining Last Vertex - same as first perimeter vertex
+  i32 lastVertexIndex = COMPONENTS_PER_COLORED_VERTEX * (numTrianges + 1);
+  (*vertices)[lastVertexIndex] = radius * cos(doublePI / numTrianges);
+  (*vertices)[lastVertexIndex + 1] = radius * sin(doublePI / numTrianges);
+  (*vertices)[lastVertexIndex + 2] = 0.0f;
+  return vertArrayLength;
+}
+
+// Using the triangle fan method; We start with a central vertex and build
+// triangles off of it
+i32 generateTexturedCircleVertices(f32 **vertices, f32 radius) {
+  i32 numTrianges = 30;
+  // 3 Vertices for the first triangle and one additional one for each one after
+  i32 numVertices = numTrianges + 2;
+  f32 doublePI = 2.0f * M_PI;
+  i32 vertArrayLength = numVertices * COMPONENTS_PER_TEXTURED_VERTEX;
+
+  *vertices = (f32 *)malloc(vertArrayLength * sizeof(f32));
+  // Definining central vertex
+  (*vertices)[0] = 0.0f; // x
+  (*vertices)[1] = 0.0f; // y
+  (*vertices)[2] = 0.0f; // z
+  (*vertices)[3] = 0.5f; // u (texture x)
+  (*vertices)[4] = 0.5f; // v (texture y)
+
+  for (i32 i = 1; i < numVertices; i++) {
+    i32 currVertexIndex = 5 * i;
+    (*vertices)[currVertexIndex] = radius * cos(i * doublePI / numTrianges);
+    (*vertices)[currVertexIndex + 1] = radius * sin(i * doublePI / numTrianges);
+    (*vertices)[currVertexIndex + 2] = 0.0f;
+    (*vertices)[currVertexIndex + 3] = 0.0f;
+    (*vertices)[currVertexIndex + 4] = 0.0f;
   }
   return vertArrayLength;
 }

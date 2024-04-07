@@ -30,7 +30,8 @@ void render_AddColorComponent(ECS *ecs, EntityID entityID,
 // Functions for use internally within the render system
 i32 generateTexturedRectangleVertices(f32 **vertices, f32 width, f32 height);
 i32 generateColoredRectangleVertices(f32 **vertices, f32 width, f32 height);
-i32 generateTexturedCircleVertices(f32 **vertices, f32 width, f32 height);
+i32 generateTexturedCircleVertices(f32 **vertices, f32 radius);
+i32 generateColoredCircleVertices(f32 **vertices, f32 radius);
 
 u32 compileAndLinkShaders(char *vertexShaderPath, char *fragmentShaderPath);
 

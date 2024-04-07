@@ -67,7 +67,7 @@ int main(void) {
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
   PhysicsAttributes pAttributesPlayer = {0.0, -0.25, 0.3, 0.1, 0.0, 0.0, 0.0};
-  PhysicsAttributes pAttributesCircle = {0.0, 0.25, 0.3, 0.3, 0.0, 0.01, -0.01};
+  PhysicsAttributes pAttributesCircle = {0.0, 0.25, 0.2, 0.2, 0.0, 0.00, -0.00};
 
   // Player Setup
   input_InstantiateEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
@@ -81,10 +81,10 @@ i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Ball Setup
   physics_InstantiateEntity(ecs, BALL_ENTITY_ID, pAttributesCircle,
                             entityComponentMasks);
-  render_InstantiateCircleEntity(ecs, BALL_ENTITY_ID, SHADER_TEXTURED,
+  render_InstantiateCircleEntity(ecs, BALL_ENTITY_ID, SHADER_COLORED,
                                  entityComponentMasks);
-  render_AddSpriteComponent(ecs, BALL_ENTITY_ID, entityComponentMasks,
-                            "textures/platform_texture.png");
+  render_AddColorComponent(ecs, BALL_ENTITY_ID, entityComponentMasks, 1.0, 0.0f,
+                           0.0f, 1.0f);
   return 0;
 }
 
@@ -102,8 +102,8 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
 }
 
 void render(ECS *ecs) {
-  render_RenderEntity(ecs, PLAYER_ENTITY_ID);
   render_RenderEntity(ecs, BALL_ENTITY_ID);
+  render_RenderEntity(ecs, PLAYER_ENTITY_ID);
 }
 
 i32 initializeAperture(GLFWwindow **window, ECS **ecs,
