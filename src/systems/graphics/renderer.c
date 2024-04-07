@@ -27,17 +27,34 @@ void render_LoadShaders() {
 void render_RenderEntity(ECS *ecs, EntityID entityID) {
   u32 shaderProgramID = ecs->materialComponent->shaderProgramID[entityID];
   glUseProgram(shaderProgramID);
-  // Calculating Translation Matrix
+  // Setting up transformation matrix
   {
     f32 xPos = ecs->transformComponent->x[entityID];
     f32 yPos = ecs->transformComponent->y[entityID];
+    f32 width = ecs->transformComponent->xScale[entityID];
     vec3 translationVector = {xPos, yPos, 0.0f};
     mat4 translationMatrix;
     glm_mat4_identity(translationMatrix);
     glm_translate(translationMatrix, translationVector);
+
+    // Projection Matrix
+    float aspectRatio = (1920.0f / 1080.0f);
+    float left, right, bottom, top, nearZ, farZ;
+    nearZ = -1.0f;
+    farZ = 1.0f;
+    left = -aspectRatio;
+    right = aspectRatio;
+    bottom = -1.0f;
+    top = 1.0f;
+    mat4 projectionMatrix;
+    glm_mat4_identity(projectionMatrix);
+    glm_ortho(left, right, bottom, top, nearZ, farZ, projectionMatrix);
+
+    mat4 transformationMatrix;
+    glm_mat4_mul(projectionMatrix, translationMatrix, transformationMatrix);
     GLint transMatLocation = glGetUniformLocation(shaderProgramID, "uTransMat");
     glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
-                       (const GLfloat *)translationMatrix);
+                       (const GLfloat *)transformationMatrix);
   }
   // Setting up fragment shader
   {

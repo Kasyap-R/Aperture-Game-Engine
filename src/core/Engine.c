@@ -66,8 +66,9 @@ int main(void) {
 // Return value is success code
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
-  PhysicsAttributes pAttributesPlayer = {0.0, -0.25, 0.3, 0.1, 0.0, 0.0, 0.0};
-  PhysicsAttributes pAttributesCircle = {0.0, 0.25, 0.2, 0.2, 0.0, 0.00, -0.00};
+  PhysicsAttributes pAttributesPlayer = {0.0, -0.25, 0.5, 0.1, 0.0, 0.0, 0.0};
+  PhysicsAttributes pAttributesCircle = {0.0, 0.25, 0.09, 0.09,
+                                         0.0, 0.00, -0.00};
 
   // Player Setup
   input_InstantiateEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
