@@ -67,8 +67,8 @@ int main(void) {
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
   PhysicsAttributes pAttributesPlayer = {0.0, -0.25, 0.5, 0.1, 0.0, 0.0, 0.0};
-  PhysicsAttributes pAttributesCircle = {0.0, 0.25, 0.09, 0.09,
-                                         0.0, 0.00, -0.00};
+  PhysicsAttributes pAttributesCircle = {0.0,  0.25,   0.09,  0.09,
+                                         0.00, -0.005, -0.005};
 
   // Player Setup
   input_InstantiateEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
@@ -98,6 +98,7 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
       input_ProcessInput(ecs, window, entityID);
       physics_ProcessInput(ecs, entityID);
     }
+    physics_CheckForCollision(ecs, PLAYER_ENTITY_ID, BALL_ENTITY_ID);
     physics_UpdateEntityPosition(ecs, entityID);
   }
 }

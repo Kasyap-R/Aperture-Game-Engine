@@ -21,3 +21,8 @@ void physics_InstantiateEntity(ECS *ecs, EntityID entityID,
 void physics_UpdateEntityPosition(ECS *ecs, EntityID entityID);
 
 void physics_ProcessInput(ECS *ecs, EntityID entityID);
+
+void physics_CheckForCollision(ECS *ecs, EntityID brickID, EntityID ballID);
+
+f32 findMaxFloat(f32 f1, f32 f2);
+f32 findMinFloat(f32 f1, f32 f2);
