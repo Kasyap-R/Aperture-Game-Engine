@@ -23,43 +23,63 @@ void physics_InstantiateEntity(ECS *ecs, EntityID entityID,
   addComponentToEntity(ecs, entityID, COMPONENT_TRANFORM, entityComponentMasks);
 }
 
-void physics_CheckForCollision(ECS *ecs, EntityID brickID, EntityID ballID) {
-  static bool hasCollided = false;
+bool physics_CheckForCollision(ECS *ecs, EntityID brickID, EntityID ballID) {
+  static i32 lastCollidedBrick = -1;
   TransformComponent *transformComponents = ecs->transformComponent;
-  f32 xBrick, yBrick, widthBrick, heightBrick, xBall, yBall, widthBall,
-      heightBall, ballRadius;
+  if (brickID == ballID || brickID == lastCollidedBrick) {
+    return false;
+  }
+  if (!checkRectangleCircleCollision(transformComponents, brickID, ballID)) {
+    return false;
+  }
+  f32 xBrick, widthBrick, xCircle;
   xBrick = transformComponents->x[brickID];
-  yBrick = transformComponents->y[brickID];
   widthBrick = transformComponents->xScale[brickID];
-  heightBrick = transformComponents->yScale[brickID];
+  xCircle = transformComponents->x[ballID];
+  f32 xMax = widthBrick / 2.0f + widthBrick * 0.1f;
+  f32 xMin = -widthBrick / 2.0f - widthBrick * 0.1f;
+  f32 xDiff = xCircle - xBrick;
+  f32 xDiffNorm = 2.0f * ((xDiff - xMin) / (xMax - xMin)) - 1.0f;
+  f32 maxXVelocity = 0.04;
+  if (xCircle > xMax) {
+    printf("GODDAMNIT\n");
+  }
+  f32 newXVelocity = xDiffNorm * maxXVelocity;
+  f32 ballYVelocity = ecs->velocityComponent->vY[ballID];
+  ecs->velocityComponent->vX[ballID] = newXVelocity;
+  ecs->velocityComponent->vY[ballID] = -ballYVelocity;
+  lastCollidedBrick = brickID;
+  printf("Normalized Distance: %.5f\n", xDiffNorm);
+  return true;
+}
+
+bool checkRectangleCircleCollision(TransformComponent *transformComponents,
+                                   EntityID rectangleID, EntityID circleID) {
+  f32 xBrick, yBrick, widthBrick, heightBrick, xCircle, yCircle, widthCircle,
+      heightCircle, circleRadius, minXBrick, maxXBrick, maxYBrick, minYBrick;
+  xBrick = transformComponents->x[rectangleID];
+  yBrick = transformComponents->y[rectangleID];
+  widthBrick = transformComponents->xScale[rectangleID];
+  heightBrick = transformComponents->yScale[rectangleID];
 
   f32 brickHalfWidth = widthBrick / 2.0f;
   f32 brickHalfHeight = heightBrick / 2.0f;
 
-  f32 minXBrick = xBrick - brickHalfWidth;
-  f32 maxXBrick = xBrick + brickHalfWidth;
-  f32 maxYBrick = yBrick + brickHalfHeight;
-  f32 minYBrick = yBrick - brickHalfHeight;
+  minXBrick = xBrick - brickHalfWidth;
+  maxXBrick = xBrick + brickHalfWidth;
+  maxYBrick = yBrick + brickHalfHeight;
+  minYBrick = yBrick - brickHalfHeight;
 
-  xBall = transformComponents->x[ballID];
-  yBall = transformComponents->y[ballID];
-  widthBall = transformComponents->xScale[ballID];
-  heightBall = transformComponents->yScale[ballID];
-  ballRadius = transformComponents->xScale[ballID];
+  xCircle = transformComponents->x[circleID];
+  yCircle = transformComponents->y[circleID];
+  circleRadius = transformComponents->xScale[circleID] / 2.0f;
 
-  f32 nearX = findMaxFloat(minXBrick, findMinFloat(xBall, maxXBrick));
-  f32 nearY = findMaxFloat(minYBrick, findMinFloat(yBall, maxYBrick));
+  f32 nearX = findMaxFloat(minXBrick, findMinFloat(xCircle, maxXBrick));
+  f32 nearY = findMaxFloat(minYBrick, findMinFloat(yCircle, maxYBrick));
 
-  f32 distance = sqrtf(pow(nearX - xBall, 2) + pow(nearY - yBall, 2));
-  if (distance <= widthBall / 2) {
-    // There is a collision
-    if (!hasCollided) {
-      printf("Collision Detected\n");
-      f32 ballYVelocity = ecs->velocityComponent->vY[ballID];
-      ecs->velocityComponent->vY[ballID] = -ballYVelocity;
-      hasCollided = true;
-    }
-  }
+  f32 distance = sqrtf(pow(nearX - xCircle, 2) + pow(nearY - yCircle, 2));
+
+  return (distance <= circleRadius);
 }
 
 void physics_ProcessInput(ECS *ecs, EntityID entityID) {

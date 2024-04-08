@@ -67,8 +67,8 @@ int main(void) {
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
   PhysicsAttributes pAttributesPlayer = {0.0, -0.25, 0.5, 0.1, 0.0, 0.0, 0.0};
-  PhysicsAttributes pAttributesCircle = {0.0,  0.25,   0.09,  0.09,
-                                         0.00, -0.005, -0.005};
+  PhysicsAttributes pAttributesCircle = {0.0,  0.25,   0.09, 0.09,
+                                         0.00, -0.003, -0.03};
 
   // Player Setup
   input_InstantiateEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
@@ -86,6 +86,41 @@ i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
                                  entityComponentMasks);
   render_AddColorComponent(ecs, BALL_ENTITY_ID, entityComponentMasks, 1.0, 0.0f,
                            0.0f, 1.0f);
+
+  // Brick Layer Setup
+  i32 currEntityNum = 2;
+  i32 numBricks = 20;
+  i32 bricksPerLayer = 5;
+  i32 numLayers = numBricks / bricksPerLayer;
+  f32 brickWidth = 2.0f / (float)bricksPerLayer;
+  f32 brickHeight = brickWidth / 3.0f;
+  f32 yForCurrLayer = 1 + brickHeight / 2.0f;
+  f32 initialX = -1 - brickWidth / 2.0f;
+  printf("Brick Width: %.3f\n", brickWidth);
+  for (u8 layer = 1; layer <= numLayers; layer++) {
+    yForCurrLayer -= brickHeight;
+    for (u8 brickNum = 1; brickNum <= bricksPerLayer; brickNum++) {
+      PhysicsAttributes pAttribs = {
+          initialX + brickWidth * brickNum,
+          yForCurrLayer,
+          brickWidth,
+          brickHeight,
+          0.0,
+          0.0,
+          0.0,
+      };
+      printf("Curr X: %.3f\n", initialX + brickWidth * brickNum);
+      physics_InstantiateEntity(ecs, currEntityNum, pAttribs,
+                                entityComponentMasks);
+      render_InstantiateRectangleEntity(ecs, currEntityNum, SHADER_TEXTURED,
+                                        entityComponentMasks);
+      render_AddSpriteComponent(ecs, currEntityNum, entityComponentMasks,
+                                "textures/brick_art.png");
+
+      currEntityNum++;
+    }
+  }
+  printf("Number of Entities: %d\n", currEntityNum);
   return 0;
 }
 
@@ -98,14 +133,21 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
       input_ProcessInput(ecs, window, entityID);
       physics_ProcessInput(ecs, entityID);
     }
-    physics_CheckForCollision(ecs, PLAYER_ENTITY_ID, BALL_ENTITY_ID);
+    if (physics_CheckForCollision(ecs, entityID, BALL_ENTITY_ID) &&
+        (entityID != PLAYER_ENTITY_ID)) {
+      ecs->entityActive[entityID] = false;
+    }
     physics_UpdateEntityPosition(ecs, entityID);
   }
 }
 
 void render(ECS *ecs) {
-  render_RenderEntity(ecs, BALL_ENTITY_ID);
-  render_RenderEntity(ecs, PLAYER_ENTITY_ID);
+  for (EntityID entityID = 0; entityID < MAX_ENTITIES; entityID++) {
+    if (!ecs->entityActive[entityID]) {
+      continue;
+    }
+    render_RenderEntity(ecs, entityID);
+  }
 }
 
 i32 initializeAperture(GLFWwindow **window, ECS **ecs,
