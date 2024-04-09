@@ -1,5 +1,9 @@
 #include "Engine.h"
 #include "ECS.h"
+#include "game.h"
+#include <GLFW/glfw3.h>
+#include <stdlib.h>
+#include <sys/types.h>
 
 #define PLAYER_ENTITY_ID 0
 #define BALL_ENTITY_ID 1
@@ -9,16 +13,10 @@ int main(void) {
   ECS *ecs;
   ComponentMask *entityComponentMasks;
 
-  i32 windowWidth = 1920;
-  i32 windowHeight = 1080;
-
-  initializeAperture(&window, &ecs, &entityComponentMasks, windowWidth,
-                     windowHeight);
+  init_aperture(&window, &ecs, &entityComponentMasks);
 
   f64 prevTime = glfwGetTime() * 1000;
   f64 lag = 0.0;
-  f64 timeSinceLastSecond = 0.0;
-  i32 FPS = 0;
 
   start(ecs, entityComponentMasks);
 
@@ -26,17 +24,10 @@ int main(void) {
   while (!glfwWindowShouldClose(window)) {
     f64 currentTime = glfwGetTime() * 1000;
     f64 deltaTime = currentTime - prevTime;
-    timeSinceLastSecond += deltaTime;
     prevTime = currentTime;
     lag += deltaTime;
-    FPS += 1;
 
-    if ((timeSinceLastSecond) >= 1000) {
-      printf("FPS: %d\n", FPS);
-      timeSinceLastSecond = 0;
-      FPS = 0;
-      fflush(stdout);
-    }
+    calculate_fps(deltaTime);
 
     update(ecs, window, entityComponentMasks);
 
@@ -50,93 +41,30 @@ int main(void) {
     // Clear back buffer
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Turquoise color
     glClear(GL_COLOR_BUFFER_BIT);
-    // Render new data to back buffer
-    // Swap Buffers
     render(ecs);
-
     glfwSwapBuffers(window);
   }
 
-  free(ecs);
-  // Deletes all of GLFW's allocated resources
-  glfwTerminate();
+  free_resources(ecs, entityComponentMasks);
+
   return 0;
 }
 
 // Return value is success code
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
-  // Set up player components
-  PhysicsAttributes pAttributesPlayer = {0.0, -0.25, 0.5, 0.1, 0.0, 0.0, 0.0};
-  PhysicsAttributes pAttributesCircle = {0.0,  0.25,   0.09, 0.09,
-                                         0.00, -0.003, -0.03};
-
-  // Player Setup
-  input_InstantiateEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
-  physics_InstantiateEntity(ecs, PLAYER_ENTITY_ID, pAttributesPlayer,
-                            entityComponentMasks);
-  render_InstantiateRectangleEntity(ecs, PLAYER_ENTITY_ID, SHADER_TEXTURED,
-                                    entityComponentMasks);
-  render_AddSpriteComponent(ecs, PLAYER_ENTITY_ID, entityComponentMasks,
-                            "textures/platform_texture.png");
-
-  // Ball Setup
-  physics_InstantiateEntity(ecs, BALL_ENTITY_ID, pAttributesCircle,
-                            entityComponentMasks);
-  render_InstantiateCircleEntity(ecs, BALL_ENTITY_ID, SHADER_COLORED,
-                                 entityComponentMasks);
-  render_AddColorComponent(ecs, BALL_ENTITY_ID, entityComponentMasks, 1.0, 0.0f,
-                           0.0f, 1.0f);
-
-  // Brick Layer Setup
-  i32 currEntityNum = 2;
-  i32 numBricks = 20;
-  i32 bricksPerLayer = 5;
-  i32 numLayers = numBricks / bricksPerLayer;
-  f32 brickWidth = 2.0f / (float)bricksPerLayer;
-  f32 brickHeight = brickWidth / 3.0f;
-  f32 yForCurrLayer = 1 + brickHeight / 2.0f;
-  f32 initialX = -1 - brickWidth / 2.0f;
-  printf("Brick Width: %.3f\n", brickWidth);
-  for (u8 layer = 1; layer <= numLayers; layer++) {
-    yForCurrLayer -= brickHeight;
-    for (u8 brickNum = 1; brickNum <= bricksPerLayer; brickNum++) {
-      PhysicsAttributes pAttribs = {
-          initialX + brickWidth * brickNum,
-          yForCurrLayer,
-          brickWidth,
-          brickHeight,
-          0.0,
-          0.0,
-          0.0,
-      };
-      printf("Curr X: %.3f\n", initialX + brickWidth * brickNum);
-      physics_InstantiateEntity(ecs, currEntityNum, pAttribs,
-                                entityComponentMasks);
-      render_InstantiateRectangleEntity(ecs, currEntityNum, SHADER_TEXTURED,
-                                        entityComponentMasks);
-      render_AddSpriteComponent(ecs, currEntityNum, entityComponentMasks,
-                                "textures/brick_art.png");
-
-      currEntityNum++;
-    }
-  }
-  printf("Number of Entities: %d\n", currEntityNum);
+  render_LoadShaders();
+  custom_start(ecs, entityComponentMasks);
   return 0;
 }
 
 void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
+  input_check_window_close(window);
+  custom_process_input(ecs, window);
   for (EntityID entityID = 0; entityID < MAX_ENTITIES; entityID++) {
     if (!ecs->entityActive[entityID]) {
       continue;
     }
-    if (hasComponent(entityID, COMPONENT_INPUT, entityComponentMasks)) {
-      input_ProcessInput(ecs, window, entityID);
-      physics_ProcessInput(ecs, entityID);
-    }
-    if (physics_CheckForCollision(ecs, entityID, BALL_ENTITY_ID) &&
-        (entityID != PLAYER_ENTITY_ID)) {
-      ecs->entityActive[entityID] = false;
-    }
+    custom_update(ecs, entityComponentMasks, entityID);
     physics_UpdateEntityPosition(ecs, entityID);
   }
 }
@@ -150,16 +78,20 @@ void render(ECS *ecs) {
   }
 }
 
-i32 initializeAperture(GLFWwindow **window, ECS **ecs,
-                       ComponentMask **entityComponentMasks, i32 windowWidth,
-                       i32 windowHeight) {
-  if (initializeWindow(window, windowWidth, windowHeight) != 0) {
+i32 init_aperture(GLFWwindow **window, ECS **ecs,
+                  ComponentMask **entityComponentMasks) {
+  init_glfw();
+
+  i32 windowWidth = 1920;
+  i32 windowHeight = 1080;
+  if (init_window(window, windowWidth, windowHeight) != 0) {
     return -1;
   }
 
+  load_opengl_functions();
+
   i32 drawableWidth;
   i32 drawableHeight;
-
   glfwGetFramebufferSize(*window, &drawableWidth, &drawableHeight);
   glViewport(0, 0, drawableWidth, drawableHeight);
 
@@ -170,32 +102,16 @@ i32 initializeAperture(GLFWwindow **window, ECS **ecs,
   initECS(*ecs);
   initEntityComponentMasks(*entityComponentMasks, maskSize);
 
-  render_LoadShaders();
   return 0;
 }
 
-void framebufferSizeCallback(GLFWwindow *window, i32 drawableWidth,
-                             i32 drawableHeight) {
+void framebuffer_size_callback(GLFWwindow *window, i32 drawableWidth,
+                               i32 drawableHeight) {
   glViewport(0, 0, drawableWidth, drawableHeight);
 }
 
-// f64 pointer is used so that initWindow can change which window the window
-// pointer points to
-i32 initializeWindow(GLFWwindow **window, i32 windowWidth, i32 windowHeight) {
-  if (!glfwInit()) {
-    printf("Failed to initialize GLFW");
-    return -1;
-  }
+i32 init_window(GLFWwindow **window, i32 windowWidth, i32 windowHeight) {
 
-  /* Disables Window Decorations (i.e. borders, name, etc.);
-   * glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-   */
-
-  // When we create a window, a context is created which is basically used to
-  // store state for the window. The values of the pixels themselves are stored
-  // in buffers
-  // NOTE: We can pass glfwGetPrimaryMonitor() instead of the first NULL to make
-  // it fullscreen mode
   *window = glfwCreateWindow(windowWidth, windowHeight,
                              "Aperture Engine Window", NULL, NULL);
 
@@ -205,20 +121,41 @@ i32 initializeWindow(GLFWwindow **window, i32 windowWidth, i32 windowHeight) {
     return -1;
   }
 
-  // Set a callback so the viewport can dynamically resize when the user resizes
-  // the window
-  glfwSetFramebufferSizeCallback(*window, framebufferSizeCallback);
+  glfwSetFramebufferSizeCallback(*window, framebuffer_size_callback);
 
-  // Tells GLFW that subsequent OpenGL calls should affect this window's context
-  // The contex is basically all the state neccesary for rendering to a window
-  // (buffers, other state info, etc.)
   glfwMakeContextCurrent(*window);
 
-  // Calls OpenGL function pointers
+  return 0;
+}
+
+void free_resources(ECS *ecs, ComponentMask *entityComponentMasks) {
+  free(ecs);
+  free(entityComponentMasks);
+  glfwTerminate();
+}
+
+void calculate_fps(f64 deltaTime) {
+  static i32 FPS = 0;
+  static f64 timeElapsedMilliseconds = 0;
+  timeElapsedMilliseconds += deltaTime;
+  FPS += 1;
+  if (timeElapsedMilliseconds > 1000) {
+    printf("FPS: %d\n", FPS);
+    timeElapsedMilliseconds = 0.0;
+    FPS = 0;
+  }
+}
+
+void init_glfw() {
+  if (!glfwInit()) {
+    printf("Failed to initialize GLFW\n");
+    exit(EXIT_FAILURE);
+  }
+}
+
+void load_opengl_functions() {
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     printf("Failed to initialize GLAD\n");
-    return -1;
+    exit(EXIT_FAILURE);
   }
-
-  return 0;
 }

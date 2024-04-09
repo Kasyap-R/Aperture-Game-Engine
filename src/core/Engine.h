@@ -16,14 +16,16 @@
 #include <string.h>
 #include <sys/types.h>
 
-// Used to keep track of which entities have which components
-// Increase size if num of components increases past 8
-i32 initializeWindow(GLFWwindow **window, i32 windowWidth, i32 windowHeight);
-void framebufferSizeCallback(GLFWwindow *window, i32 drawableWidth,
-                             i32 drawableHeight);
+i32 init_window(GLFWwindow **window, i32 windowWidth, i32 windowHeight);
+void framebuffer_size_callback(GLFWwindow *window, i32 drawableWidth,
+                               i32 drawableHeight);
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks);
 void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks);
 void render(ECS *ecs);
-i32 initializeAperture(GLFWwindow **window, ECS **ecs,
-                       ComponentMask **entityComponentMasks, i32 windowWidth,
-                       i32 windowHeight);
+i32 init_aperture(GLFWwindow **window, ECS **ecs,
+                  ComponentMask **entityComponentMasks);
+void run();
+void calculate_fps(f64 deltaTime);
+void free_resources(ECS *ecs, ComponentMask *entityComponentMasks);
+void init_glfw();
+void load_opengl_functions();

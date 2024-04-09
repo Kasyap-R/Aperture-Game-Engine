@@ -32,24 +32,25 @@ bool physics_CheckForCollision(ECS *ecs, EntityID brickID, EntityID ballID) {
   if (!checkRectangleCircleCollision(transformComponents, brickID, ballID)) {
     return false;
   }
-  f32 xBrick, widthBrick, xCircle;
+  f32 xBrick, widthBrick, xCircle, xMax, xMin, xDiff, xDiffNorm, maxXVelocity,
+      newXVelocity, ballYVelocity;
+
   xBrick = transformComponents->x[brickID];
   widthBrick = transformComponents->xScale[brickID];
   xCircle = transformComponents->x[ballID];
-  f32 xMax = widthBrick / 2.0f + widthBrick * 0.1f;
-  f32 xMin = -widthBrick / 2.0f - widthBrick * 0.1f;
-  f32 xDiff = xCircle - xBrick;
-  f32 xDiffNorm = 2.0f * ((xDiff - xMin) / (xMax - xMin)) - 1.0f;
-  f32 maxXVelocity = 0.04;
-  if (xCircle > xMax) {
-    printf("GODDAMNIT\n");
-  }
-  f32 newXVelocity = xDiffNorm * maxXVelocity;
-  f32 ballYVelocity = ecs->velocityComponent->vY[ballID];
+
+  xMax = widthBrick / 2.0f + widthBrick * 0.1f;
+  xMin = -widthBrick / 2.0f - widthBrick * 0.1f;
+  xDiff = xCircle - xBrick;
+  xDiffNorm = 2.0f * ((xDiff - xMin) / (xMax - xMin)) - 1.0f;
+
+  maxXVelocity = 0.04;
+  newXVelocity = xDiffNorm * maxXVelocity;
+
+  ballYVelocity = ecs->velocityComponent->vY[ballID];
   ecs->velocityComponent->vX[ballID] = newXVelocity;
   ecs->velocityComponent->vY[ballID] = -ballYVelocity;
   lastCollidedBrick = brickID;
-  printf("Normalized Distance: %.5f\n", xDiffNorm);
   return true;
 }
 

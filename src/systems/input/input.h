@@ -10,3 +10,5 @@
 void input_InstantiateEntity(ECS *ecs, EntityID entityID,
                              ComponentMask *entityComponentMasks);
 void input_ProcessInput(ECS *ecs, GLFWwindow *window, EntityID entityID);
+
+void input_check_window_close(GLFWwindow *window);
