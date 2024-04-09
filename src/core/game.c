@@ -59,15 +59,58 @@ void custom_start(ECS *ecs, ComponentMask *entityComponentMasks) {
 
 void custom_process_input(ECS *ecs, GLFWwindow *window) {
   input_ProcessInput(ecs, window, PLAYER_ENTITY_ID);
+  bool isAKeyPressed = ecs->inputComponent->isAKeyPressed[PLAYER_ENTITY_ID];
+  bool isDKeyPressed = ecs->inputComponent->isDKeyPressed[PLAYER_ENTITY_ID];
+  f32 playerVelocity = 0.05f;
+  if (isAKeyPressed && isDKeyPressed) {
+    physics_update_velocity(ecs->velocityComponent, PLAYER_ENTITY_ID, 0.0f,
+                            0.0f, 0.0f);
+  } else if (isAKeyPressed) {
+    physics_update_velocity(ecs->velocityComponent, PLAYER_ENTITY_ID,
+                            -playerVelocity, 0.0f, 0.0f);
+  } else if (isDKeyPressed) {
+    physics_update_velocity(ecs->velocityComponent, PLAYER_ENTITY_ID,
+                            playerVelocity, 0.0f, 0.0f);
+  } else {
+    physics_update_velocity(ecs->velocityComponent, PLAYER_ENTITY_ID, 0.0f,
+                            0.0f, 0.0f);
+  }
 }
 
 void custom_update(ECS *ecs, ComponentMask *entityComponentMasks,
                    EntityID entityID) {
-  if (entityID == PLAYER_ENTITY_ID) {
-    physics_ProcessInput(ecs, entityID);
+  if (physics_check_rectangle_circle_collision(ecs->transformComponent,
+                                               entityID, BALL_ENTITY_ID)) {
+    handle_ball_brick_collision(ecs, entityID, BALL_ENTITY_ID);
+    if ((entityID != PLAYER_ENTITY_ID && entityID != BALL_ENTITY_ID)) {
+      ecs->entityActive[entityID] = false;
+    }
   }
-  if (physics_CheckForCollision(ecs, entityID, BALL_ENTITY_ID) &&
-      (entityID != PLAYER_ENTITY_ID)) {
-    ecs->entityActive[entityID] = false;
+}
+
+void handle_ball_brick_collision(ECS *ecs, EntityID brickID, EntityID ballID) {
+  static i32 lastCollidedBrick = -1;
+  if (ballID == brickID || brickID == lastCollidedBrick) {
+    return;
   }
+  TransformComponent *transformComponents = ecs->transformComponent;
+  f32 xBrick, widthBrick, xCircle, xMax, xMin, xDiff, xDiffNorm, maxXVelocity,
+      newXVelocity, ballYVelocity;
+
+  xBrick = transformComponents->x[brickID];
+  widthBrick = transformComponents->xScale[brickID];
+  xCircle = transformComponents->x[ballID];
+
+  xMax = widthBrick / 2.0f + widthBrick * 0.1f;
+  xMin = -widthBrick / 2.0f - widthBrick * 0.1f;
+  xDiff = xCircle - xBrick;
+  xDiffNorm = 2.0f * ((xDiff - xMin) / (xMax - xMin)) - 1.0f;
+
+  maxXVelocity = 0.04;
+  newXVelocity = xDiffNorm * maxXVelocity;
+
+  ballYVelocity = ecs->velocityComponent->vY[ballID];
+  physics_update_velocity(ecs->velocityComponent, ballID, newXVelocity,
+                          -ballYVelocity, 0.0f);
+  lastCollidedBrick = brickID;
 }

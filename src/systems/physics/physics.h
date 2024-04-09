@@ -24,8 +24,12 @@ void physics_ProcessInput(ECS *ecs, EntityID entityID);
 
 bool physics_CheckForCollision(ECS *ecs, EntityID brickID, EntityID ballID);
 
-bool checkRectangleCircleCollision(TransformComponent *transformComponents,
-                                   EntityID rectangleID, EntityID circleID);
+bool physics_check_rectangle_circle_collision(
+    TransformComponent *transformComponents, EntityID rectangleID,
+    EntityID circleID);
+
+void physics_update_velocity(VelocityComponent *vComponents, EntityID entityID,
+                             f32 xVelocity, f32 yVelocity, f32 zVelocity);
 
 f32 findMaxFloat(f32 f1, f32 f2);
 f32 findMinFloat(f32 f1, f32 f2);

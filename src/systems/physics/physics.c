@@ -23,39 +23,15 @@ void physics_InstantiateEntity(ECS *ecs, EntityID entityID,
   addComponentToEntity(ecs, entityID, COMPONENT_TRANFORM, entityComponentMasks);
 }
 
+// This should implement an algorithm to check for all potential collisions in a
+// scene
 bool physics_CheckForCollision(ECS *ecs, EntityID brickID, EntityID ballID) {
-  static i32 lastCollidedBrick = -1;
-  TransformComponent *transformComponents = ecs->transformComponent;
-  if (brickID == ballID || brickID == lastCollidedBrick) {
-    return false;
-  }
-  if (!checkRectangleCircleCollision(transformComponents, brickID, ballID)) {
-    return false;
-  }
-  f32 xBrick, widthBrick, xCircle, xMax, xMin, xDiff, xDiffNorm, maxXVelocity,
-      newXVelocity, ballYVelocity;
-
-  xBrick = transformComponents->x[brickID];
-  widthBrick = transformComponents->xScale[brickID];
-  xCircle = transformComponents->x[ballID];
-
-  xMax = widthBrick / 2.0f + widthBrick * 0.1f;
-  xMin = -widthBrick / 2.0f - widthBrick * 0.1f;
-  xDiff = xCircle - xBrick;
-  xDiffNorm = 2.0f * ((xDiff - xMin) / (xMax - xMin)) - 1.0f;
-
-  maxXVelocity = 0.04;
-  newXVelocity = xDiffNorm * maxXVelocity;
-
-  ballYVelocity = ecs->velocityComponent->vY[ballID];
-  ecs->velocityComponent->vX[ballID] = newXVelocity;
-  ecs->velocityComponent->vY[ballID] = -ballYVelocity;
-  lastCollidedBrick = brickID;
   return true;
 }
 
-bool checkRectangleCircleCollision(TransformComponent *transformComponents,
-                                   EntityID rectangleID, EntityID circleID) {
+bool physics_check_rectangle_circle_collision(
+    TransformComponent *transformComponents, EntityID rectangleID,
+    EntityID circleID) {
   f32 xBrick, yBrick, widthBrick, heightBrick, xCircle, yCircle, widthCircle,
       heightCircle, circleRadius, minXBrick, maxXBrick, maxYBrick, minYBrick;
   xBrick = transformComponents->x[rectangleID];
@@ -83,19 +59,9 @@ bool checkRectangleCircleCollision(TransformComponent *transformComponents,
   return (distance <= circleRadius);
 }
 
-void physics_ProcessInput(ECS *ecs, EntityID entityID) {
-
-  bool isAKeyPressed = ecs->inputComponent->isAKeyPressed[entityID];
-  bool isDKeyPressed = ecs->inputComponent->isDKeyPressed[entityID];
-  if (isAKeyPressed && isDKeyPressed) {
-    setEntityVelocity(ecs->velocityComponent, entityID, 0.0f, 0.0f);
-  } else if (isAKeyPressed) {
-    setEntityVelocity(ecs->velocityComponent, entityID, -0.05f, 0.0f);
-  } else if (isDKeyPressed) {
-    setEntityVelocity(ecs->velocityComponent, entityID, 0.05f, 0.0f);
-  } else {
-    setEntityVelocity(ecs->velocityComponent, entityID, 0.0f, 0.0f);
-  }
+void physics_update_velocity(VelocityComponent *vComponents, EntityID entityID,
+                             f32 xVelocity, f32 yVelocity, f32 zVelocity) {
+  setEntityVelocity(vComponents, entityID, xVelocity, yVelocity);
 }
 
 void physics_UpdateEntityPosition(ECS *ecs, EntityID entityID) {
