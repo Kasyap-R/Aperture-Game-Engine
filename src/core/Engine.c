@@ -85,7 +85,7 @@ i32 init_aperture(GLFWwindow **window, ECS **ecs,
   i32 windowWidth = 1920;
   i32 windowHeight = 1080;
   if (init_window(window, windowWidth, windowHeight) != 0) {
-    return -1;
+    exit(EXIT_FAILURE);
   }
 
   load_opengl_functions();

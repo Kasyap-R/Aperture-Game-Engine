@@ -32,12 +32,5 @@ void physics_update_velocity(VelocityComponent *vComponents, EntityID entityID,
                              f32 xVelocity, f32 yVelocity, f32 zVelocity);
 
 f32 findMaxFloat(f32 f1, f32 f2);
-f32 findMinFloat(f32 f1, f32 f2);
 
-// Once you know there has been a collision, find current xPosition of brick and
-// x position of cirlce find difference between them, if xCircle - xBrick and
-// use some formula to get it between -1 and 1, we then multiply that number by
-// a specified max X velocity for the ball
-//
-// given a range from (-halfBrickWidth to halfBrickWidth) convert that range to
-// between -1 and 1
+f32 findMinFloat(f32 f1, f32 f2);

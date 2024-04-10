@@ -3,9 +3,10 @@
 
 void custom_start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up player components
-  PhysicsAttributes pAttributesPlayer = {0.0, -0.25, 0.5, 0.1, 0.0, 0.0, 0.0};
-  PhysicsAttributes pAttributesCircle = {0.0,  0.25,   0.09, 0.09,
-                                         0.00, -0.003, -0.03};
+  PhysicsAttributes pAttributesPlayer = {-1000.0, -250.0, 600.0, 100.0,
+                                         0.0,     0.0,    0.0};
+  PhysicsAttributes pAttributesCircle = {0.0,  150.0, 90.0, 90.0,
+                                         0.00, 50.0,  -90.0};
 
   // Player Setup
   input_InstantiateEntity(ecs, PLAYER_ENTITY_ID, entityComponentMasks);
@@ -29,10 +30,10 @@ void custom_start(ECS *ecs, ComponentMask *entityComponentMasks) {
   i32 numBricks = 20;
   i32 bricksPerLayer = 5;
   i32 numLayers = numBricks / bricksPerLayer;
-  f32 brickWidth = 2.0f / (float)bricksPerLayer;
-  f32 brickHeight = brickWidth / 3.0f;
-  f32 yForCurrLayer = 1 + brickHeight / 2.0f;
-  f32 initialX = -1 - brickWidth / 2.0f;
+  f32 brickWidth = 2000 / (float)bricksPerLayer;
+  f32 brickHeight = brickWidth / 6.0f;
+  f32 yForCurrLayer = 562.5 + brickHeight / 2.0f;
+  f32 initialX = -1000 - brickWidth / 2.0f;
   for (u8 layer = 1; layer <= numLayers; layer++) {
     yForCurrLayer -= brickHeight;
     for (u8 brickNum = 1; brickNum <= bricksPerLayer; brickNum++) {
@@ -61,7 +62,7 @@ void custom_process_input(ECS *ecs, GLFWwindow *window) {
   input_ProcessInput(ecs, window, PLAYER_ENTITY_ID);
   bool isAKeyPressed = ecs->inputComponent->isAKeyPressed[PLAYER_ENTITY_ID];
   bool isDKeyPressed = ecs->inputComponent->isDKeyPressed[PLAYER_ENTITY_ID];
-  f32 playerVelocity = 0.05f;
+  f32 playerVelocity = 100.0f;
   if (isAKeyPressed && isDKeyPressed) {
     physics_update_velocity(ecs->velocityComponent, PLAYER_ENTITY_ID, 0.0f,
                             0.0f, 0.0f);
@@ -106,7 +107,7 @@ void handle_ball_brick_collision(ECS *ecs, EntityID brickID, EntityID ballID) {
   xDiff = xCircle - xBrick;
   xDiffNorm = 2.0f * ((xDiff - xMin) / (xMax - xMin)) - 1.0f;
 
-  maxXVelocity = 0.04;
+  maxXVelocity = 120.0;
   newXVelocity = xDiffNorm * maxXVelocity;
 
   ballYVelocity = ecs->velocityComponent->vY[ballID];

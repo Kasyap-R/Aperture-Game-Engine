@@ -14,6 +14,7 @@
 #define VERTICES_PER_RECTANGE 6
 
 static HashMap *shaderTypeToID = NULL;
+static const f32 aspectRatio = (1920.0f / 1080.0f);
 
 void render_LoadShaders() {
   u8 colorShaderID =
@@ -38,14 +39,15 @@ void render_RenderEntity(ECS *ecs, EntityID entityID) {
     glm_translate(translationMatrix, translationVector);
 
     // Projection Matrix
-    float aspectRatio = (1920.0f / 1080.0f);
     float left, right, bottom, top, nearZ, farZ;
     nearZ = -1.0f;
     farZ = 1.0f;
-    left = -aspectRatio;
-    right = aspectRatio;
-    bottom = -1.0f;
-    top = 1.0f;
+    // Set these values to match up with our planned coordinate system and also
+    // support a 16:9 aspect ratio
+    left = -1000.0;
+    right = 1000.0;
+    bottom = -562.5;
+    top = 562.5;
     mat4 projectionMatrix;
     glm_mat4_identity(projectionMatrix);
     glm_ortho(left, right, bottom, top, nearZ, farZ, projectionMatrix);

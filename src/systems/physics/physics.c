@@ -71,8 +71,8 @@ void physics_UpdateEntityPosition(ECS *ecs, EntityID entityID) {
   f32 currentYPos = ecs->transformComponent->y[entityID];
 
   // printf("EntityID: %d\nX Velocity: %.3f\n", entityID, xVelocity);
-  currentXPos += xVelocity * 0.10f;
-  currentYPos += yVelocity * 0.10f;
+  currentXPos += xVelocity * SEC_PER_UPDATE;
+  currentYPos += yVelocity * SEC_PER_UPDATE;
 
   ecs->transformComponent->x[entityID] = currentXPos;
   ecs->transformComponent->y[entityID] = currentYPos;

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #define MS_PER_UPDATE 16
+#define SEC_PER_UPDATE 0.016
 #define MAX_ENTITIES 25
 
 typedef uint8_t EntityID;
