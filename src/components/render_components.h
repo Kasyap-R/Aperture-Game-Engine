@@ -10,6 +10,7 @@ typedef enum {
 typedef struct {
   u32 VAO[MAX_ENTITIES];
   u32 VBO[MAX_ENTITIES];
+  u32 EBO[MAX_ENTITIES];
   u32 vertexCount[MAX_ENTITIES];
 } MeshComponent;
 
@@ -34,7 +35,7 @@ void initMaterialComponent(MaterialComponent *materialComponent);
 void initColorComponent(ColorComponent *colorComponent);
 void initSpriteComponent(SpriteComponent *spriteComponent);
 void setEntityMesh(MeshComponent *meshComponent, EntityID entityID, u32 VAO,
-                   u32 VBO, u32 vertexCount);
+                   u32 VBO, u32 EBO, u32 vertexCount);
 void setEntityMaterial(MaterialComponent *materialComponent, EntityID entityID,
                        u32 shaderProgramID, ShaderType shaderType);
 void setEntityColor(ColorComponent *colorComponent, EntityID entityID,

@@ -1,9 +1,9 @@
 #pragma once
+#include "../core/ECS.h"
+#include "../core/Engine.h"
 #include "../systems/graphics/renderer.h"
 #include "../systems/input/input.h"
 #include "../systems/physics/physics.h"
-#include "ECS.h"
-#include "Engine.h"
 
 #define PLAYER_ENTITY_ID 0
 #define BALL_ENTITY_ID 1

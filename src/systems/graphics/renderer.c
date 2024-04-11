@@ -2,16 +2,13 @@
 #include "../../../lib/stb_image.h"
 #include "../../debug/debug.h"
 #include "shaders.h"
+#include "shapes.h"
 #include "textures.h"
 #include <cglm/affine.h>
 #include <cglm/cam.h>
 #include <cglm/mat4.h>
 #include <cglm/types.h>
 #include <string.h>
-
-#define COMPONENTS_PER_TEXTURED_VERTEX 5
-#define COMPONENTS_PER_COLORED_VERTEX 3
-#define VERTICES_PER_RECTANGE 6
 
 static HashMap *shaderTypeToID = NULL;
 static const f32 aspectRatio = (1920.0f / 1080.0f);
@@ -30,30 +27,36 @@ void render_RenderEntity(ECS *ecs, EntityID entityID) {
   glUseProgram(shaderProgramID);
   // Setting up transformation matrix
   {
+    // Translation Matrix
     f32 xPos = ecs->transformComponent->x[entityID];
     f32 yPos = ecs->transformComponent->y[entityID];
-    f32 width = ecs->transformComponent->xScale[entityID];
-    vec3 translationVector = {xPos, yPos, 0.0f};
+    f32 zPos = ecs->transformComponent->z[entityID];
+    printf("X: %.3f\nY: %.3f\nZ: %.3f\n", xPos, yPos, zPos);
+    vec3 translationVector = {xPos, yPos, zPos};
     mat4 translationMatrix;
     glm_mat4_identity(translationMatrix);
     glm_translate(translationMatrix, translationVector);
 
+    // View Matrix
+    vec3 cameraPos = {-200.0f, 0.0f, 0.5f};
+    vec3 cameraTarget = {0.0f, 0.0f, 0.0f};
+    vec3 upVector = {0.0f, 1.0f, 0.0f};
+    mat4 viewMatrix;
+    glm_lookat(cameraPos, cameraTarget, upVector, viewMatrix);
+
     // Projection Matrix
-    float left, right, bottom, top, nearZ, farZ;
-    nearZ = -1.0f;
-    farZ = 1.0f;
-    // Set these values to match up with our planned coordinate system and also
-    // support a 16:9 aspect ratio
-    left = -1000.0;
-    right = 1000.0;
-    bottom = -562.5;
-    top = 562.5;
+    float fov, nearZ, farZ;
+    nearZ = 0.1f;
+    farZ = 500.0f;
+    fov = 90.0f;
     mat4 projectionMatrix;
     glm_mat4_identity(projectionMatrix);
-    glm_ortho(left, right, bottom, top, nearZ, farZ, projectionMatrix);
+    glm_perspective(glm_rad(fov), aspectRatio, nearZ, farZ, projectionMatrix);
 
+    mat4 modelViewMatrix;
+    glm_mat4_mul(viewMatrix, translationMatrix, modelViewMatrix);
     mat4 transformationMatrix;
-    glm_mat4_mul(projectionMatrix, translationMatrix, transformationMatrix);
+    glm_mat4_mul(projectionMatrix, modelViewMatrix, transformationMatrix);
     GLint transMatLocation = glGetUniformLocation(shaderProgramID, "uTransMat");
     glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
                        (const GLfloat *)transformationMatrix);
@@ -91,26 +94,26 @@ void render_RenderEntity(ECS *ecs, EntityID entityID) {
   glBindVertexArray(0);
 }
 
-void render_InstantiateRectangleEntity(ECS *ecs, EntityID entityID,
-                                       ShaderType shaderType,
-                                       ComponentMask *entityComponentMasks) {
+void render_init_rec_prism(ECS *ecs, EntityID entityID, ShaderType shaderType,
+                           ComponentMask *entityComponentMasks) {
   f32 *vertices_heap;
   u32 numVerts;
-  u32 VAO, VBO;
-  f32 width = ecs->transformComponent->xScale[entityID];
-  f32 height = ecs->transformComponent->yScale[entityID];
-  int vertArrayLength;
+  u32 VAO, VBO, EBO;
+  f32 xScale = ecs->transformComponent->xScale[entityID];
+  f32 yScale = ecs->transformComponent->yScale[entityID];
+  f32 zScale = ecs->transformComponent->zScale[entityID];
+
+  u32 vertArraySize;
   u32 shaderProgramID;
 
   switch (shaderType) {
   case SHADER_COLORED:
-    vertArrayLength =
-        generateColoredRectangleVertices(&vertices_heap, width, height);
+    vertArraySize = create_colored_rec_prism_vertices(&vertices_heap, xScale,
+                                                      yScale, zScale);
     shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_COLORED);
     break;
   case SHADER_TEXTURED:
-    vertArrayLength =
-        generateTexturedRectangleVertices(&vertices_heap, width, height);
+    vertArraySize = 40;
     shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_TEXTURED);
     break;
   default:
@@ -118,51 +121,15 @@ void render_InstantiateRectangleEntity(ECS *ecs, EntityID entityID,
     exit(EXIT_FAILURE);
   }
 
-  generateVertexBuffers(shaderType, vertices_heap, vertArrayLength, &VAO, &VBO,
-                        &numVerts);
+  generateVertexBuffers(shaderType, vertices_heap, vertArraySize, &VAO, &VBO);
+  // Red TODO: add support for shape types later; currently assuming only rec
+  // prisms
+  init_rec_prism_EBO(&VAO, &EBO);
+  numVerts = sizeof(rec_prism_indices) / sizeof(rec_prism_indices[0]);
 
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID,
                     shaderType);
-  setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, numVerts);
-
-  addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
-  addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
-
-  free(vertices_heap);
-}
-
-void render_InstantiateCircleEntity(ECS *ecs, EntityID entityID,
-                                    ShaderType shaderType,
-                                    ComponentMask *entityComponentMasks) {
-  f32 *vertices_heap;
-  u32 numVerts;
-  u32 VAO, VBO;
-  f32 width = ecs->transformComponent->xScale[entityID];
-  f32 height = ecs->transformComponent->yScale[entityID];
-  int vertArrayLength;
-  f32 radius = width / 2;
-
-  u32 shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_COLORED);
-
-  switch (shaderType) {
-  case SHADER_COLORED:
-    vertArrayLength = generateColoredCircleVertices(&vertices_heap, height / 2);
-    break;
-  case SHADER_TEXTURED:
-    vertArrayLength =
-        generateTexturedCircleVertices(&vertices_heap, height / 2);
-    break;
-  default:
-    printf("Invalid Shader Type\n");
-    exit(EXIT_FAILURE);
-  }
-
-  generateVertexBuffers(shaderType, vertices_heap, vertArrayLength, &VAO, &VBO,
-                        &numVerts);
-
-  setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID,
-                    shaderType);
-  setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, numVerts);
+  setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, EBO, numVerts);
 
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
@@ -186,14 +153,12 @@ void render_AddColorComponent(ECS *ecs, EntityID entityID,
 }
 
 void generateVertexBuffers(ShaderType shaderType, f32 *vertices,
-                           u32 vertArrayLength, u32 *VAO, u32 *VBO,
-                           u32 *numVerts) {
+                           u32 vertArraySize, u32 *VAO, u32 *VBO) {
   glGenVertexArrays(1, VAO);
   glGenBuffers(1, VBO);
   glBindBuffer(GL_ARRAY_BUFFER, *VBO);
   glBindVertexArray(*VAO);
-  glBufferData(GL_ARRAY_BUFFER, vertArrayLength * sizeof(f32), vertices,
-               GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertArraySize, vertices, GL_STATIC_DRAW);
 
   {
     u32 posCoordsPerVertex = 3;
@@ -203,14 +168,12 @@ void generateVertexBuffers(ShaderType shaderType, f32 *vertices,
 
     switch (shaderType) {
     case SHADER_COLORED:
-      *numVerts = vertArrayLength / COMPONENTS_PER_COLORED_VERTEX;
       sizeOfVertex *= COMPONENTS_PER_COLORED_VERTEX;
       glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
                             sizeOfVertex, (void *)0);
       glEnableVertexAttribArray(0);
       break;
     case SHADER_TEXTURED:
-      *numVerts = vertArrayLength / COMPONENTS_PER_TEXTURED_VERTEX;
       sizeOfVertex *= COMPONENTS_PER_TEXTURED_VERTEX;
       texCoordsPerVertex = 2;
       texCoordOffset = 3;
@@ -229,104 +192,10 @@ void generateVertexBuffers(ShaderType shaderType, f32 *vertices,
   }
 }
 
-// TODO: Update this to support rotation when needed
-i32 generateTexturedRectangleVertices(f32 **vertices, f32 width, f32 height) {
-  f32 x = 0.0;
-  f32 y = 0.0;
-  f32 halfWidth = width / 2;
-  f32 halfHeight = height / 2;
-  i32 vertArrayLength = VERTICES_PER_RECTANGE * COMPONENTS_PER_TEXTURED_VERTEX;
-  int vertArraySize = vertArrayLength * sizeof(f32);
-  *vertices = (float *)malloc(vertArraySize);
-  f32 rectangeVertices[] = {
-      x - halfWidth, y + halfHeight, 0.0f, 0.0f, 1.0f, // Top-left
-      x - halfWidth, y - halfHeight, 0.0f, 0.0f, 0.0f, // Bottom-left
-      x + halfWidth, y - halfHeight, 0.0f, 1.0f, 0.0f, // Bottom-right
-
-      x - halfWidth, y + halfHeight, 0.0f, 0.0f, 1.0f, // Top-left
-      x + halfWidth, y - halfHeight, 0.0f, 1.0f, 0.0f, // Bottom-right
-      x + halfWidth, y + halfHeight, 0.0f, 1.0f, 1.0f, // Top-right
-  };
-  memcpy(*vertices, rectangeVertices, vertArraySize);
-  return vertArrayLength;
-}
-
-i32 generateColoredCircleVertices(f32 **vertices, f32 radius) {
-  i32 numTrianges = 30;
-  // 3 Vertices for the first triangle and one additional one for each one after
-  i32 numVertices = numTrianges + 2;
-  f32 doublePI = 2.0f * M_PI;
-  i32 vertArrayLength = numVertices * COMPONENTS_PER_COLORED_VERTEX;
-
-  *vertices = (f32 *)malloc(vertArrayLength * sizeof(f32));
-  // Definining central vertex
-  (*vertices)[0] = 0.0f; // x
-  (*vertices)[1] = 0.0f; // y
-  (*vertices)[2] = 0.0f; // z
-
-  for (i32 i = 1; i <= numTrianges; i++) {
-    i32 currVertexIndex = COMPONENTS_PER_COLORED_VERTEX * i;
-    (*vertices)[currVertexIndex] =
-        radius * cos(i * doublePI / (float)numTrianges);
-    (*vertices)[currVertexIndex + 1] =
-        radius * sin(i * doublePI / (float)numTrianges);
-    (*vertices)[currVertexIndex + 2] = 0.0f;
-  }
-
-  // Defining Last Vertex - same as first perimeter vertex
-  i32 lastVertexIndex = COMPONENTS_PER_COLORED_VERTEX * (numTrianges + 1);
-  (*vertices)[lastVertexIndex] = radius * cos(doublePI / numTrianges);
-  (*vertices)[lastVertexIndex + 1] = radius * sin(doublePI / numTrianges);
-  (*vertices)[lastVertexIndex + 2] = 0.0f;
-  return vertArrayLength;
-}
-
-// Using the triangle fan method; We start with a central vertex and build
-// triangles off of it
-i32 generateTexturedCircleVertices(f32 **vertices, f32 radius) {
-  i32 numTrianges = 30;
-  // 3 Vertices for the first triangle and one additional one for each one after
-  i32 numVertices = numTrianges + 2;
-  f32 doublePI = 2.0f * M_PI;
-  i32 vertArrayLength = numVertices * COMPONENTS_PER_TEXTURED_VERTEX;
-
-  *vertices = (f32 *)malloc(vertArrayLength * sizeof(f32));
-  // Definining central vertex
-  (*vertices)[0] = 0.0f; // x
-  (*vertices)[1] = 0.0f; // y
-  (*vertices)[2] = 0.0f; // z
-  (*vertices)[3] = 0.5f; // u (texture x)
-  (*vertices)[4] = 0.5f; // v (texture y)
-
-  for (i32 i = 1; i < numVertices; i++) {
-    i32 currVertexIndex = 5 * i;
-    (*vertices)[currVertexIndex] = radius * cos(i * doublePI / numTrianges);
-    (*vertices)[currVertexIndex + 1] = radius * sin(i * doublePI / numTrianges);
-    (*vertices)[currVertexIndex + 2] = 0.0f;
-    (*vertices)[currVertexIndex + 3] = 0.0f;
-    (*vertices)[currVertexIndex + 4] = 0.0f;
-  }
-  return vertArrayLength;
-}
-
-// TODO: Update this to support rotation when needed
-i32 generateColoredRectangleVertices(f32 **vertices, f32 width, f32 height) {
-  f32 x = 0.0;
-  f32 y = 0.0;
-  f32 halfWidth = width / 2;
-  f32 halfHeight = height / 2;
-  i32 vertArrayLength = VERTICES_PER_RECTANGE * COMPONENTS_PER_COLORED_VERTEX;
-  int vertArraySize = vertArrayLength * sizeof(f32);
-  *vertices = (float *)malloc(vertArraySize);
-  f32 rectangeVertices[] = {
-      x - halfWidth, y + halfHeight, 0.0f, // Top-left
-      x - halfWidth, y - halfHeight, 0.0f, // Bottom-left
-      x + halfWidth, y - halfHeight, 0.0f, // Bottom-right
-
-      x - halfWidth, y + halfHeight, 0.0f, // Top-left
-      x + halfWidth, y - halfHeight, 0.0f, // Bottom-right
-      x + halfWidth, y + halfHeight, 0.0f, // Top-right
-  };
-  memcpy(*vertices, rectangeVertices, vertArraySize);
-  return vertArrayLength;
+void init_rec_prism_EBO(u32 *VAO, u32 *EBO) {
+  glBindVertexArray(*VAO);
+  glGenBuffers(1, EBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rec_prism_indices),
+               rec_prism_indices, GL_STATIC_DRAW);
 }

@@ -7,11 +7,13 @@
 typedef struct {
   f32 xPos;
   f32 yPos;
-  f32 width;
-  f32 height;
-  f32 rotation;
+  f32 zPos;
+  f32 xScale;
+  f32 yScale;
+  f32 zScale;
   f32 xVelocity;
   f32 yVelocity;
+  f32 zVelocity;
 } PhysicsAttributes;
 
 void physics_InstantiateEntity(ECS *ecs, EntityID entityID,
@@ -30,6 +32,10 @@ bool physics_check_rectangle_circle_collision(
 
 void physics_update_velocity(VelocityComponent *vComponents, EntityID entityID,
                              f32 xVelocity, f32 yVelocity, f32 zVelocity);
+
+void physics_update_transform(TransformComponent *tComponents,
+                              EntityID entityID, f32 xPos, f32 yPos, f32 zPos,
+                              f32 xScale, f32 yScale, f32 zScale);
 
 f32 findMaxFloat(f32 f1, f32 f2);
 

@@ -1,6 +1,6 @@
 #include "Engine.h"
+#include "../game/game.h"
 #include "ECS.h"
-#include "game.h"
 #include <GLFW/glfw3.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -19,6 +19,7 @@ int main(void) {
   f64 lag = 0.0;
 
   start(ecs, entityComponentMasks);
+  custom_start(ecs, entityComponentMasks);
 
   // main game loop
   while (!glfwWindowShouldClose(window)) {
@@ -28,8 +29,6 @@ int main(void) {
     lag += deltaTime;
 
     calculate_fps(deltaTime);
-
-    update(ecs, window, entityComponentMasks);
 
     // Ensure game time catches up with real time
     while (lag >= MS_PER_UPDATE) {
@@ -41,6 +40,7 @@ int main(void) {
     // Clear back buffer
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // Turquoise color
     glClear(GL_COLOR_BUFFER_BIT);
+
     render(ecs);
     glfwSwapBuffers(window);
   }
@@ -53,7 +53,6 @@ int main(void) {
 // Return value is success code
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   render_LoadShaders();
-  custom_start(ecs, entityComponentMasks);
   return 0;
 }
 

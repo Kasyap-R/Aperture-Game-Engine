@@ -3,6 +3,9 @@
 
 void initMeshComponent(MeshComponent *meshComponent) {
   memset(meshComponent->vertexCount, 0, sizeof(meshComponent->vertexCount));
+  memset(meshComponent->VAO, 0, sizeof(meshComponent->VAO));
+  memset(meshComponent->VBO, 0, sizeof(meshComponent->VBO));
+  memset(meshComponent->EBO, 0, sizeof(meshComponent->EBO));
 }
 
 void initMaterialComponent(MaterialComponent *materialComponent) {
@@ -24,10 +27,11 @@ void initSpriteComponent(SpriteComponent *spriteComponent) {
 }
 
 void setEntityMesh(MeshComponent *meshComponent, uint8_t entityID,
-                   unsigned int VAO, unsigned int VBO,
+                   unsigned int VAO, unsigned int VBO, u32 EBO,
                    unsigned int vertexCount) {
   meshComponent->VAO[entityID] = VAO;
   meshComponent->VBO[entityID] = VBO;
+  meshComponent->EBO[entityID] = EBO;
   meshComponent->vertexCount[entityID] = vertexCount;
 }
 
