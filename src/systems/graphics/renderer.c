@@ -1,6 +1,7 @@
 #include "renderer.h"
 #include "../../../lib/stb_image.h"
 #include "../../debug/debug.h"
+#include "camera.h"
 #include "shaders.h"
 #include "shapes.h"
 #include "textures.h"
@@ -12,6 +13,8 @@
 
 static HashMap *shaderTypeToID = NULL;
 static const f32 aspectRatio = (1920.0f / 1080.0f);
+static Camera cameraSettings;
+static const f32 cameraSpeed = 20.0f;
 
 void render_LoadShaders() {
   u8 colorShaderID =
@@ -22,39 +25,62 @@ void render_LoadShaders() {
   ds_insertHashMap(&shaderTypeToID, SHADER_TEXTURED, textureShaderID);
 }
 
+void render_init_camera() { cameraSettings = init_camera(); }
+
+void render_update_camera(InputComponent *inputComponent, EntityID playerID) {
+  cameraSettings = update_player_camera(inputComponent, playerID,
+                                        cameraSettings, cameraSpeed);
+}
+
 void render_RenderEntity(ECS *ecs, EntityID entityID) {
   u32 shaderProgramID = ecs->materialComponent->shaderProgramID[entityID];
   glUseProgram(shaderProgramID);
   // Setting up transformation matrix
   {
-    // Translation Matrix
+    printf("ID: %d\n", entityID);
+    // Model Matrix
     f32 xPos = ecs->transformComponent->x[entityID];
     f32 yPos = ecs->transformComponent->y[entityID];
     f32 zPos = ecs->transformComponent->z[entityID];
-    printf("X: %.3f\nY: %.3f\nZ: %.3f\n", xPos, yPos, zPos);
     vec3 translationVector = {xPos, yPos, zPos};
     mat4 translationMatrix;
     glm_mat4_identity(translationMatrix);
     glm_translate(translationMatrix, translationVector);
 
+    f32 time = glfwGetTime();
+    f32 rotationSpeed = 2.0f * M_PI / 5.0f;
+    f32 angle = fmod(time * rotationSpeed, 2.0f * M_PI);
+
+    mat4 modelMatrix;
+    glm_mat4_identity(modelMatrix);
+    /* glm_rotate_at(modelMatrix, translationVector, angle,
+                  (vec3){0.45f, 0.45f, 0.0f}); */
+    glm_mat4_mul(modelMatrix, translationMatrix, modelMatrix);
+
     // View Matrix
-    vec3 cameraPos = {-200.0f, 0.0f, 0.5f};
-    vec3 cameraTarget = {0.0f, 0.0f, 0.0f};
-    vec3 upVector = {0.0f, 1.0f, 0.0f};
     mat4 viewMatrix;
+    glm_mat4_identity(viewMatrix);
+    /* printFloatArray(cameraSettings.cameraPos, 3);
+    printFloatArray(cameraSettings.cameraUp, 3);
+    printFloatArray(cameraSettings.cameraFront, 3);
+    glm_lookat(cameraSettings.cameraPos, cameraSettings.cameraFront,
+               cameraSettings.cameraUp, viewMatrix); */
+    vec3 cameraPos = {-150.0f, 150.0f, 400.0f};
+    vec3 cameraTarget = {0.0f, 0.0f, -1.0f};
+    vec3 upVector = {0.0f, 1.0f, 0.0f};
     glm_lookat(cameraPos, cameraTarget, upVector, viewMatrix);
 
     // Projection Matrix
     float fov, nearZ, farZ;
     nearZ = 0.1f;
-    farZ = 500.0f;
+    farZ = 800.0f;
     fov = 90.0f;
     mat4 projectionMatrix;
     glm_mat4_identity(projectionMatrix);
     glm_perspective(glm_rad(fov), aspectRatio, nearZ, farZ, projectionMatrix);
 
     mat4 modelViewMatrix;
-    glm_mat4_mul(viewMatrix, translationMatrix, modelViewMatrix);
+    glm_mat4_mul(viewMatrix, modelMatrix, modelViewMatrix);
     mat4 transformationMatrix;
     glm_mat4_mul(projectionMatrix, modelViewMatrix, transformationMatrix);
     GLint transMatLocation = glGetUniformLocation(shaderProgramID, "uTransMat");
@@ -89,8 +115,10 @@ void render_RenderEntity(ECS *ecs, EntityID entityID) {
   }
   u32 VAO = ecs->meshComponent->VAO[entityID];
   u32 numVerts = ecs->meshComponent->vertexCount[entityID];
+  glEnable(GL_DEPTH_TEST);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glBindVertexArray(VAO);
-  glDrawArrays(GL_TRIANGLE_FAN, 0, numVerts);
+  glDrawElements(GL_TRIANGLES, numVerts, GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);
 }
 
@@ -113,7 +141,8 @@ void render_init_rec_prism(ECS *ecs, EntityID entityID, ShaderType shaderType,
     shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_COLORED);
     break;
   case SHADER_TEXTURED:
-    vertArraySize = 40;
+    vertArraySize = create_textured_rec_prism_vertices(&vertices_heap, xScale,
+                                                       yScale, zScale);
     shaderProgramID = ds_getHashMapValue(&shaderTypeToID, SHADER_TEXTURED);
     break;
   default:
@@ -125,7 +154,8 @@ void render_init_rec_prism(ECS *ecs, EntityID entityID, ShaderType shaderType,
   // Red TODO: add support for shape types later; currently assuming only rec
   // prisms
   init_rec_prism_EBO(&VAO, &EBO);
-  numVerts = sizeof(rec_prism_indices) / sizeof(rec_prism_indices[0]);
+  numVerts =
+      sizeof(rec_prism_colored_indices) / sizeof(rec_prism_colored_indices[0]);
 
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID,
                     shaderType);
@@ -196,6 +226,6 @@ void init_rec_prism_EBO(u32 *VAO, u32 *EBO) {
   glBindVertexArray(*VAO);
   glGenBuffers(1, EBO);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rec_prism_indices),
-               rec_prism_indices, GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rec_prism_colored_indices),
+               rec_prism_colored_indices, GL_STATIC_DRAW);
 }

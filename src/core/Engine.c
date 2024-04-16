@@ -53,6 +53,7 @@ int main(void) {
 // Return value is success code
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   render_LoadShaders();
+  render_init_camera();
   return 0;
 }
 
@@ -64,6 +65,9 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
       continue;
     }
     custom_update(ecs, entityComponentMasks, entityID);
+    if (entityID == 1) {
+      continue;
+    }
     physics_UpdateEntityPosition(ecs, entityID);
   }
 }
@@ -71,6 +75,9 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
 void render(ECS *ecs) {
   for (EntityID entityID = 0; entityID < MAX_ENTITIES; entityID++) {
     if (!ecs->entityActive[entityID]) {
+      continue;
+    }
+    if (entityID == 1) {
       continue;
     }
     render_RenderEntity(ecs, entityID);

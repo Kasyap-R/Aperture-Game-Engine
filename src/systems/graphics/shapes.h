@@ -5,7 +5,7 @@
 #define COMPONENTS_PER_COLORED_VERTEX 3
 #define UNIQUE_VERTICES_PER_RECTANGULAR_PRISM 8
 
-static const u32 rec_prism_indices[] = {
+static const u32 rec_prism_colored_indices[] = {
     // Front face
     0, 1, 2, 2, 3, 0,
     // Right face
@@ -21,3 +21,5 @@ static const u32 rec_prism_indices[] = {
 
 u32 create_colored_rec_prism_vertices(f32 **vertices, f32 xScale, f32 yScale,
                                       f32 zScale);
+u32 create_textured_rec_prism_vertices(f32 **vertices, f32 xScale, f32 yScale,
+                                       f32 zScale);

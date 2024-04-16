@@ -4,6 +4,7 @@
 #include "../../core/ECS.h"
 #include "../../core/Engine.h"
 #include "../../data_structures/hashmap.h"
+#include "camera.h"
 #include "shaders.h"
 #include "shapes.h"
 #include <cglm/cglm.h>
@@ -12,6 +13,7 @@
 
 // Called Upon Initiation of the Engine
 void render_LoadShaders();
+void render_init_camera();
 
 // Functions to be called externally by the user/engine
 void render_RenderEntity(ECS *ecs, EntityID entityID);
@@ -26,6 +28,7 @@ void render_AddSpriteComponent(ECS *ecs, EntityID entityID,
 void render_AddColorComponent(ECS *ecs, EntityID entityID,
                               ComponentMask *entityComponentMasks, f32 rValue,
                               f32 gValue, f32 bValue, f32 aValue);
+void render_update_camera(InputComponent *inputComponent, EntityID playerID);
 
 // Functions for use internally within the render system
 void generateVertexBuffers(ShaderType shaderType, f32 *vertices,

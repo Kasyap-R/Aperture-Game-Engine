@@ -16,10 +16,10 @@ void physics_InstantiateEntity(ECS *ecs, EntityID entityID,
     f32 yVelocity = physicsAttributes.yVelocity;
     f32 zVelocity = physicsAttributes.zVelocity;
 
-    TransformComponent *tComponents = ecs->transformComponent;
-
-    physics_update_transform(tComponents, entityID, xPos, yPos, zPos, xScale,
-                             yScale, zScale);
+    physics_update_transform(ecs->transformComponent, entityID, xPos, yPos,
+                             zPos, xScale, yScale, zScale);
+    physics_update_velocity(ecs->velocityComponent, entityID, xVelocity,
+                            yVelocity, zVelocity);
   }
 
   addComponentToEntity(ecs, entityID, COMPONENT_VELOCITY, entityComponentMasks);
@@ -71,17 +71,19 @@ void physics_UpdateEntityPosition(ECS *ecs, EntityID entityID) {
   f32 currentYPos = ecs->transformComponent->y[entityID];
   f32 currentZPos = ecs->transformComponent->z[entityID];
 
-  // printf("EntityID: %d\nX Velocity: %.3f\n", entityID, xVelocity);
   currentXPos += xVelocity * SEC_PER_UPDATE;
   currentYPos += yVelocity * SEC_PER_UPDATE;
+  currentZPos += zVelocity * SEC_PER_UPDATE;
 
   ecs->transformComponent->x[entityID] = currentXPos;
   ecs->transformComponent->y[entityID] = currentYPos;
+  ecs->transformComponent->z[entityID] = currentZPos;
 }
 
 f32 findMaxFloat(f32 f1, f32 f2) { return (f1 > f2) ? f1 : f2; }
 f32 findMinFloat(f32 f1, f32 f2) { return (f1 < f2) ? f1 : f2; }
-// Both of these are setters when the entirety of a component needs to be
+
+// Both of these are setters used when the entirety of a component needs to be
 // changed (usually upon instantiation)
 void physics_update_velocity(VelocityComponent *vComponents, EntityID entityID,
                              f32 xVelocity, f32 yVelocity, f32 zVelocity) {

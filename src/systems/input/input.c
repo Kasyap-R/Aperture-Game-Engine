@@ -2,11 +2,25 @@
 #include <GLFW/glfw3.h>
 
 void input_ProcessInput(ECS *ecs, GLFWwindow *window, EntityID entityID) {
+
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    ecs->inputComponent->isWKeyPressed[entityID] = true;
+  } else {
+    ecs->inputComponent->isWKeyPressed[entityID] = false;
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    ecs->inputComponent->isSKeyPressed[entityID] = true;
+  } else {
+    ecs->inputComponent->isSKeyPressed[entityID] = false;
+  }
+
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
     ecs->inputComponent->isAKeyPressed[entityID] = true;
   } else {
     ecs->inputComponent->isAKeyPressed[entityID] = false;
   }
+
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
     ecs->inputComponent->isDKeyPressed[entityID] = true;
   } else {
