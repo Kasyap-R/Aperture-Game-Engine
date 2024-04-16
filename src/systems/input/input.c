@@ -12,6 +12,16 @@ void input_ProcessInput(ECS *ecs, GLFWwindow *window, EntityID entityID) {
   } else {
     ecs->inputComponent->isDKeyPressed[entityID] = false;
   }
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    ecs->inputComponent->isWKeyPressed[entityID] = true;
+  } else {
+    ecs->inputComponent->isWKeyPressed[entityID] = false;
+  }
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    ecs->inputComponent->isSKeyPressed[entityID] = true;
+  } else {
+    ecs->inputComponent->isSKeyPressed[entityID] = false;
+  }
 }
 
 void input_InstantiateEntity(ECS *ecs, EntityID entityID,

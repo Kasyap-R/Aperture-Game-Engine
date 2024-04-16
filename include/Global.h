@@ -6,6 +6,7 @@
 #define MS_PER_UPDATE 16
 #define SEC_PER_UPDATE 0.016
 #define MAX_ENTITIES 25
+#define CAMERA_ID 0
 
 typedef uint8_t EntityID;
 typedef uint8_t u8;

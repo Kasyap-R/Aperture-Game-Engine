@@ -12,6 +12,8 @@
 
 static HashMap *shaderTypeToID = NULL;
 static const f32 aspectRatio = (1920.0f / 1080.0f);
+static mat4 viewMatrix;
+static mat4 projectionMatrix;
 
 void render_LoadShaders() {
   u8 colorShaderID =
@@ -20,6 +22,15 @@ void render_LoadShaders() {
       compileAndLinkShaders("shaders/texture.vert", "shaders/texture.frag");
   ds_insertHashMap(&shaderTypeToID, SHADER_COLORED, colorShaderID);
   ds_insertHashMap(&shaderTypeToID, SHADER_TEXTURED, textureShaderID);
+}
+
+void render_init_projection_matrix() {
+  float fov, nearZ, farZ;
+  nearZ = 0.1f;
+  farZ = 500.0f;
+  fov = 90.0f;
+  glm_mat4_identity(projectionMatrix);
+  glm_perspective(glm_rad(fov), aspectRatio, nearZ, farZ, projectionMatrix);
 }
 
 void render_RenderEntity(ECS *ecs, EntityID entityID) {
@@ -31,27 +42,10 @@ void render_RenderEntity(ECS *ecs, EntityID entityID) {
     f32 xPos = ecs->transformComponent->x[entityID];
     f32 yPos = ecs->transformComponent->y[entityID];
     f32 zPos = ecs->transformComponent->z[entityID];
-    printf("X: %.3f\nY: %.3f\nZ: %.3f\n", xPos, yPos, zPos);
     vec3 translationVector = {xPos, yPos, zPos};
     mat4 translationMatrix;
     glm_mat4_identity(translationMatrix);
     glm_translate(translationMatrix, translationVector);
-
-    // View Matrix
-    vec3 cameraPos = {-200.0f, 0.0f, 0.5f};
-    vec3 cameraTarget = {0.0f, 0.0f, 0.0f};
-    vec3 upVector = {0.0f, 1.0f, 0.0f};
-    mat4 viewMatrix;
-    glm_lookat(cameraPos, cameraTarget, upVector, viewMatrix);
-
-    // Projection Matrix
-    float fov, nearZ, farZ;
-    nearZ = 0.1f;
-    farZ = 500.0f;
-    fov = 90.0f;
-    mat4 projectionMatrix;
-    glm_mat4_identity(projectionMatrix);
-    glm_perspective(glm_rad(fov), aspectRatio, nearZ, farZ, projectionMatrix);
 
     mat4 modelViewMatrix;
     glm_mat4_mul(viewMatrix, translationMatrix, modelViewMatrix);
@@ -87,10 +81,25 @@ void render_RenderEntity(ECS *ecs, EntityID entityID) {
       break;
     }
   }
+  draw_elements(ecs, entityID);
+}
+
+void render_calculate_view_matrix(ECS *ecs, EntityID cameraID) {
+  f32 xPos = ecs->transformComponent->x[cameraID];
+  f32 yPos = ecs->transformComponent->y[cameraID];
+  f32 zPos = ecs->transformComponent->z[cameraID];
+
+  vec3 cameraPos = {xPos, yPos, zPos};
+  vec3 cameraTarget = {0.0f, 0.0f, 0.0f};
+  vec3 upVector = {0.0f, 1.0f, 0.0f};
+  glm_lookat(cameraPos, cameraTarget, upVector, viewMatrix);
+}
+
+void draw_elements(ECS *ecs, EntityID entityID) {
   u32 VAO = ecs->meshComponent->VAO[entityID];
   u32 numVerts = ecs->meshComponent->vertexCount[entityID];
   glBindVertexArray(VAO);
-  glDrawArrays(GL_TRIANGLE_FAN, 0, numVerts);
+  glDrawElements(GL_TRIANGLES, numVerts, GL_UNSIGNED_INT, 0);
   glBindVertexArray(0);
 }
 
@@ -130,7 +139,6 @@ void render_init_rec_prism(ECS *ecs, EntityID entityID, ShaderType shaderType,
   setEntityMaterial(ecs->materialComponent, entityID, shaderProgramID,
                     shaderType);
   setEntityMesh(ecs->meshComponent, entityID, VAO, VBO, EBO, numVerts);
-
   addComponentToEntity(ecs, entityID, COMPONENT_MESH, entityComponentMasks);
   addComponentToEntity(ecs, entityID, COMPONENT_MATERIAL, entityComponentMasks);
 
@@ -161,35 +169,39 @@ void generateVertexBuffers(ShaderType shaderType, f32 *vertices,
   glBufferData(GL_ARRAY_BUFFER, vertArraySize, vertices, GL_STATIC_DRAW);
 
   {
-    u32 posCoordsPerVertex = 3;
-    u32 sizeOfVertex = sizeof(f32);
-    u32 texCoordsPerVertex;
-    u32 texCoordOffset;
-
     switch (shaderType) {
     case SHADER_COLORED:
-      sizeOfVertex *= COMPONENTS_PER_COLORED_VERTEX;
-      glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
-                            sizeOfVertex, (void *)0);
-      glEnableVertexAttribArray(0);
+      init_colored_VAO();
       break;
     case SHADER_TEXTURED:
-      sizeOfVertex *= COMPONENTS_PER_TEXTURED_VERTEX;
-      texCoordsPerVertex = 2;
-      texCoordOffset = 3;
-      glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE,
-                            sizeOfVertex, (void *)0);
-      glEnableVertexAttribArray(0);
-      glVertexAttribPointer(1, texCoordsPerVertex, GL_FLOAT, GL_FALSE,
-                            sizeOfVertex,
-                            (void *)(texCoordOffset * sizeof(f32)));
-      glEnableVertexAttribArray(1);
+      init_textured_VAO();
       break;
     default:
       printf("Invalid Shader Type\n");
       exit(EXIT_FAILURE);
     }
   }
+}
+
+void init_colored_VAO() {
+  u32 sizeOfVertex = sizeof(f32) * COMPONENTS_PER_COLORED_VERTEX;
+  u32 posCoordsPerVertex = 3;
+  glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE, sizeOfVertex,
+                        (void *)0);
+  glEnableVertexAttribArray(0);
+}
+
+void init_textured_VAO() {
+  u32 sizeOfVertex = sizeof(f32) * COMPONENTS_PER_TEXTURED_VERTEX;
+  u32 posCoordsPerVertex = 3;
+  u32 texCoordsPerVertex = 2;
+  u32 texCoordOffset = 3;
+  glVertexAttribPointer(0, posCoordsPerVertex, GL_FLOAT, GL_FALSE, sizeOfVertex,
+                        (void *)0);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(1, texCoordsPerVertex, GL_FLOAT, GL_FALSE, sizeOfVertex,
+                        (void *)(texCoordOffset * sizeof(f32)));
+  glEnableVertexAttribArray(1);
 }
 
 void init_rec_prism_EBO(u32 *VAO, u32 *EBO) {

@@ -53,6 +53,7 @@ int main(void) {
 // Return value is success code
 i32 start(ECS *ecs, ComponentMask *entityComponentMasks) {
   render_LoadShaders();
+  render_init_projection_matrix();
   return 0;
 }
 
@@ -69,8 +70,12 @@ void update(ECS *ecs, GLFWwindow *window, ComponentMask *entityComponentMasks) {
 }
 
 void render(ECS *ecs) {
+  render_calculate_view_matrix(ecs, CAMERA_ID);
   for (EntityID entityID = 0; entityID < MAX_ENTITIES; entityID++) {
     if (!ecs->entityActive[entityID]) {
+      continue;
+    }
+    if (entityID == CAMERA_ID) {
       continue;
     }
     render_RenderEntity(ecs, entityID);
