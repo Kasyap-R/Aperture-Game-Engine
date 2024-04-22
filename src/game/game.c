@@ -23,8 +23,12 @@ void custom_start(ECS *ecs, ComponentMask *entityComponentMasks) {
                            1.0f);
 }
 
+// TODO: Determine how to let engine handle camera movement simply given
+// velocity
 void custom_process_input(ECS *ecs, GLFWwindow *window) {
   input_ProcessInput(ecs, window, CAMERA_ID);
+  if (ecs->inputComponent->isWKeyPressed[CAMERA_ID]) {
+  }
 }
 
 void custom_update(ECS *ecs, ComponentMask *entityComponentMasks,
