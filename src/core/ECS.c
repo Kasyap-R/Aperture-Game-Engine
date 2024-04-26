@@ -8,6 +8,7 @@ bool hasComponent(EntityID entityID, ComponentType type,
 void addComponentToEntity(ECS *ecs, EntityID entityID, ComponentType type,
                           ComponentMask *entityComponentMasks) {
   ecs->entityActive[entityID] = true;
+  printf("EntityID: %d\n", entityID);
   // type represents which bit a component is represented by
   // we create a mask here where it is just 1 bit shifted to the types byte and
   // we OR to guarantee a 1 is there, which means that entity has that specific

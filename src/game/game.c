@@ -5,16 +5,16 @@
 
 void custom_start(ECS *ecs, ComponentMask *entityComponentMasks) {
   // Set up Camera/Player
-  /* PhysicsAttributes playerPhysAttribs = {
+  PhysicsAttributes playerPhysAttribs = {
       -400.0f, 90.0f, 90.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
   };
   input_InstantiateEntity(ecs, CAMERA_ID, entityComponentMasks);
   physics_InstantiateEntity(ecs, CAMERA_ID, playerPhysAttribs,
-                            entityComponentMasks); */
+                            entityComponentMasks);
 
   // Set up Cube
   PhysicsAttributes pAttribs = {
-      1.0, 1.0, 1.0, 100.0, 100.0, 100.0, 0.0, 0.0, 0.0,
+      0.0, 0.0, 0.0, 100.0, 100.0, 100.0, 0.0, 0.0, 0.0,
   };
   physics_InstantiateEntity(ecs, CUBE_ID, pAttribs, entityComponentMasks);
 
@@ -23,12 +23,8 @@ void custom_start(ECS *ecs, ComponentMask *entityComponentMasks) {
                            1.0f);
 }
 
-// TODO: Determine how to let engine handle camera movement simply given
-// velocity
 void custom_process_input(ECS *ecs, GLFWwindow *window) {
   input_ProcessInput(ecs, window, CAMERA_ID);
-  if (ecs->inputComponent->isWKeyPressed[CAMERA_ID]) {
-  }
 }
 
 void custom_update(ECS *ecs, ComponentMask *entityComponentMasks,

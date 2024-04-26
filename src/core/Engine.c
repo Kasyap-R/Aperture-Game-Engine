@@ -78,7 +78,6 @@ void render(ECS *ecs) {
     if (entityID == CAMERA_ID) {
       continue;
     }
-    printf("RENDERING: %d\n", entityID);
     render_RenderEntity(ecs, entityID);
   }
 }

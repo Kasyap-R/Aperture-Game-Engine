@@ -23,7 +23,6 @@ void physics_InstantiateEntity(ECS *ecs, EntityID entityID,
   }
 
   addComponentToEntity(ecs, entityID, COMPONENT_VELOCITY, entityComponentMasks);
-
   addComponentToEntity(ecs, entityID, COMPONENT_TRANFORM, entityComponentMasks);
 }
 
@@ -33,7 +32,7 @@ bool physics_CheckForCollision(ECS *ecs, EntityID brickID, EntityID ballID) {
   return true;
 }
 
-// 2D only - deprecated red
+// 2D only - deprecated
 bool physics_check_rectangle_circle_collision(
     TransformComponent *transformComponents, EntityID rectangleID,
     EntityID circleID) {
