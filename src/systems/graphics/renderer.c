@@ -47,13 +47,14 @@ void render_RenderEntity(ECS *ecs, EntityID entityID) {
     glm_mat4_identity(translationMatrix);
     glm_translate(translationMatrix, translationVector);
 
-    mat4 modelViewMatrix;
+    /* mat4 modelViewMatrix;
     glm_mat4_mul(viewMatrix, translationMatrix, modelViewMatrix);
     mat4 transformationMatrix;
-    glm_mat4_mul(projectionMatrix, modelViewMatrix, transformationMatrix);
+    glm_mat4_mul(projectionMatrix, modelViewMatrix, transformationMatrix); */
     GLint transMatLocation = glGetUniformLocation(shaderProgramID, "uTransMat");
+    // Just using translationMatrix for now
     glUniformMatrix4fv(transMatLocation, 1, GL_FALSE,
-                       (const GLfloat *)transformationMatrix);
+                       (const GLfloat *)translationMatrix);
   }
   // Setting up fragment shader
   {
@@ -90,7 +91,7 @@ void render_calculate_view_matrix(ECS *ecs, EntityID cameraID) {
   f32 zPos = ecs->transformComponent->z[cameraID];
 
   vec3 cameraPos = {xPos, yPos, zPos};
-  vec3 cameraTarget = {0.0f, 0.0f, 0.0f};
+  vec3 cameraTarget = {0.0f, 0.1f, 0.0f};
   vec3 upVector = {0.0f, 1.0f, 0.0f};
   glm_lookat(cameraPos, cameraTarget, upVector, viewMatrix);
 }
